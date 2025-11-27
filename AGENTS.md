@@ -62,7 +62,15 @@ bd close bd-42 --reason "Completed" --json
 4. **Work on it**: Implement, test, document
 5. **Discover new work?** Create linked issue:
    - `bd create "Found bug" -p 1 --deps discovered-from:<parent-id>`
-6. **Commit with Conventional Commits**: Use clear, conventional commit messages
+6. **Sync before finalizing**: Before committing your final changes, pull latest from main and rebase
+   - `git fetch origin`
+   - `git rebase origin/main`
+   - If conflicts occur, resolve them intelligently:
+     - For code conflicts: analyze both changes and merge logically
+     - For `.beads/issues.jsonl`: the beads merge driver should handle automatically, but if manual resolution needed, preserve both issue updates
+     - After resolving: `git add .` and `git rebase --continue`
+   - This ensures your changes apply cleanly on top of latest main
+7. **Commit with Conventional Commits**: Use clear, conventional commit messages
    - Format: `<type>(<scope>): <subject> [<issue-id>]`
    - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
    - Examples:
@@ -70,10 +78,10 @@ bd close bd-42 --reason "Completed" --json
      - `fix(timer): correct remaining time calculation [family-panel-13]`
      - `docs(readme): update installation instructions [family-panel-1]`
    - Always include the issue ID in brackets at the end
-7. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
-8. **Complete**: `bd close <id> --reason "Done"`
-9. **Push and request review**: Push your branch and notify human for review
-   - `git push -u origin <branch-name>`
+8. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
+9. **Complete**: `bd close <id> --reason "Done"`
+10. **Push and request review**: Push your branch and notify human for review
+   - `git push -u origin <branch-name>` (use `--force-with-lease` if you rebased)
    - Do NOT merge to main yourself
    - Human will review and merge after approval
 
@@ -132,3 +140,30 @@ history/
 - ❌ Do NOT clutter repo root with planning documents
 - ❌ Do NOT merge to main without human review
 - ❌ Do NOT commit directly to main branch
+
+## Parallel Agent Workflows
+
+This project supports running multiple AI agents in parallel on different issues. Each agent works in a separate repository clone with complete isolation.
+
+**Key points:**
+- Multiple agents can work simultaneously on different issues
+- Each agent has its own clone of the repository
+- Full beads daemon support (auto-sync, MCP server) in each clone
+- Configuration syncs automatically via git
+- **Do NOT use git worktrees** - they break beads daemon mode
+
+**For detailed setup and workflow instructions, see:**
+- [PARALLEL_AGENTS.md](./PARALLEL_AGENTS.md) - Complete guide for running multiple agents
+
+**Quick reference:**
+```bash
+# Before claiming work, always sync
+git pull origin main
+
+# Claim your assigned issue
+bd update bd-a1b2 --status in_progress
+
+# Work normally - daemon handles auto-sync
+# Commit code + .beads/issues.jsonl together
+# Push your branch when done
+```
