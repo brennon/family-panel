@@ -132,7 +132,13 @@ Before starting work:
 1. Verify you're on the feature/bd-a1b2-short-description branch
 2. Run: bd show bd-a1b2
 3. Work on the issue, committing code + .beads/issues.jsonl together
-4. When complete: push your branch and notify me for review
+
+When complete:
+1. Mark issue as blocked: bd update bd-a1b2 --status blocked --notes "Waiting for PR review. Work complete: <summary>"
+2. Create PR with mcp__github__create_pull_request
+   - IMPORTANT: Include [bd-a1b2] in PR title for automatic issue closure
+3. PR will be reviewed and merged by human
+4. GitHub Action will automatically close the beads issue when PR is merged
 
 If you discover new work during implementation:
 bd create "Issue found" -p 1 --deps discovered-from:bd-a1b2 --json
@@ -156,16 +162,30 @@ claude-code
 
 The agent will:
 1. Commit changes with conventional commits format
-2. Push branch: `git push -u origin feature/bd-a1b2-short-description`
-3. Notify you for review
+2. Mark issue as blocked pending review:
+   ```bash
+   bd update bd-a1b2 --status blocked --notes "Waiting for PR review. Work complete: <summary>"
+   ```
+3. Create pull request using GitHub MCP:
+   ```bash
+   # Use mcp__github__create_pull_request
+   # IMPORTANT: Include issue ID in PR title [bd-a1b2]
+   # This enables automatic closure when PR is merged
+   ```
 
 ### 5. After PR Merged
 
+When you merge the PR on GitHub:
+- **GitHub Action automatically closes the beads issue**
+- No manual `bd close` needed
+- The updated `.beads/issues.jsonl` is committed to main automatically
+
+Then clean up the agent clone:
 ```bash
 # In agent-1 clone
 cd ~/Projects/family-panel-workers/agent-1
 git checkout main
-git pull origin main
+git pull origin main  # Gets the auto-closed issue update
 git branch -d feature/bd-a1b2-short-description
 
 # Ready for next issue!
