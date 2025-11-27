@@ -60,8 +60,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: close ${{ steps.extract-issue.outputs.issue_id }} after PR #${{ github.event.pull_request.number }} merge
-
-🤖 Automated beads issue closure via GitHub Actions"
+            git commit -m "chore: close ${{ steps.extract-issue.outputs.issue_id }} after PR #${{ github.event.pull_request.number }} merge" \
+              -m "🤖 Automated beads issue closure via GitHub Actions"
             git push
           fi
