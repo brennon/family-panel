@@ -11,6 +11,8 @@ jobs:
     # Only run if PR was actually merged (not just closed)
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    env:
+      BEADS_DIR: ${{ github.workspace }}/.beads
 
     steps:
       - name: Checkout repository
