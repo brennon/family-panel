@@ -82,8 +82,8 @@ bd close bd-42 --reason "Completed" --json
 9. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
    - `bd update <id> --status blocked --notes "Waiting for PR review. Work complete: <brief summary of changes>"`
    - This signals the issue is done but needs human approval before closing
-10. **Create pull request**: Use GitHub MCP server to create PR for review
-   - Use `mcp__github__create_pull_request` with appropriate title and description
+10. **Create pull request**: Use GitHub CLI to create PR for review
+   - Use with appropriate title and description (e.g., `gh pr create --title "feat: add feature [family-panel-5]" --body <PR DESCRIPTION>`)
    - **IMPORTANT**: Include issue ID in PR title in brackets (e.g., `feat: add feature [family-panel-5]`)
    - The bracketed issue ID enables automatic closure when PR is merged
    - Describe changes, testing done, and any review notes in PR body
