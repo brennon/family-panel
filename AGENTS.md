@@ -79,11 +79,19 @@ bd close bd-42 --reason "Completed" --json
      - `docs(readme): update installation instructions [family-panel-1]`
    - Always include the issue ID in brackets at the end
 8. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
-9. **Complete**: `bd close <id> --reason "Done"`
-10. **Push and request review**: Push your branch and notify human for review
-   - `git push -u origin <branch-name>` (use `--force-with-lease` if you rebased)
-   - Do NOT merge to main yourself
-   - Human will review and merge after approval
+9. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
+   - `bd update <id> --status blocked --notes "Waiting for PR review. Work complete: <brief summary of changes>"`
+   - This signals the issue is done but needs human approval before closing
+10. **Create pull request**: Use GitHub MCP server to create PR for review
+   - Use `mcp__github__create_pull_request` with appropriate title and description
+   - **IMPORTANT**: Include issue ID in PR title in brackets (e.g., `feat: add feature [family-panel-5]`)
+   - The bracketed issue ID enables automatic closure when PR is merged
+   - Describe changes, testing done, and any review notes in PR body
+11. **Automatic closure**: When human merges the PR, a GitHub Action will automatically:
+   - Extract the issue ID from PR title
+   - Close the beads issue with reason "PR #<number> merged"
+   - Commit the updated `.beads/issues.jsonl` back to main
+   - No manual `bd close` needed!
 
 ### Auto-Sync
 

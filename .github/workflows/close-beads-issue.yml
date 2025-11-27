@@ -1,0 +1,67 @@
+name: Close Beads Issue on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  close-issue:
+    # Only run if PR was actually merged (not just closed)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history so bd can access git state
+          fetch-depth: 0
+          # Use GitHub token to allow pushing back to main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install beads
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Extract issue ID from PR title
+        id: extract-issue
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          # Extract issue ID like [family-panel-4ci] from PR title
+          ISSUE_ID=$(echo "$PR_TITLE" | grep -oP '\[family-panel-[a-z0-9]+\]' | tr -d '[]')
+          echo "issue_id=$ISSUE_ID" >> $GITHUB_OUTPUT
+
+          if [ -z "$ISSUE_ID" ]; then
+            echo "No beads issue ID found in PR title"
+          else
+            echo "Found beads issue: $ISSUE_ID"
+          fi
+
+      - name: Close beads issue
+        if: steps.extract-issue.outputs.issue_id != ''
+        run: |
+          bd close ${{ steps.extract-issue.outputs.issue_id }} \
+            --reason "PR #${{ github.event.pull_request.number }} merged" \
+            --json
+
+      - name: Commit updated beads database
+        if: steps.extract-issue.outputs.issue_id != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add the updated issues file
+          git add .beads/issues.jsonl
+
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: close ${{ steps.extract-issue.outputs.issue_id }} after PR #${{ github.event.pull_request.number }} merge
+
+🤖 Automated beads issue closure via GitHub Actions"
+            git push
+          fi
