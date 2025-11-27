@@ -135,7 +135,7 @@ Before starting work:
 
 When complete:
 1. Mark issue as blocked: bd update bd-a1b2 --status blocked --notes "Waiting for PR review. Work complete: <summary>"
-2. Create PR with mcp__github__create_pull_request
+2. Create PR with `gh pr create`
    - IMPORTANT: Include [bd-a1b2] in PR title for automatic issue closure
 3. PR will be reviewed and merged by human
 4. GitHub Action will automatically close the beads issue when PR is merged
