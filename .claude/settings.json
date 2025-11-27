@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__beads__set_context",
+      "mcp__beads__list",
+      "mcp__beads__stats",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__beads__where_am_i",
+      "mcp__beads__create",
+      "mcp__beads__update",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "mcp__fetch__fetch_markdown",
+      "Bash(git pull:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
