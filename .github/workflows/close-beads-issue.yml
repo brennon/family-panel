@@ -28,6 +28,12 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      - name: Initialize beads database
+        run: |
+          # Initialize beads database (will auto-import from issues.jsonl)
+          cd ${{ github.workspace }}
+          bd init
+
       - name: Extract issue ID from PR title
         id: extract-issue
         run: |
