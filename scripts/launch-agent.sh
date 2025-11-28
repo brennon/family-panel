@@ -14,6 +14,7 @@ SLOT=$3
 
 MAIN_WORKSPACE=$HOME/Projects/family-panel
 WORKERS_DIR=$HOME/Projects/family-panel-workers
+REPO_ADDRESS=https://github.com/brennon/family-panel.git
 
 if [ -z "$ISSUE_ID" ] || [ -z "$DESCRIPTION" ] || [ -z "$SLOT" ]; then
     echo "Usage: $0 <issue-id> <description> <slot-number>"
@@ -36,7 +37,7 @@ echo ""
 # Check if slot exists
 if [ ! -d "$CLONE_PATH" ]; then
     echo "❌ Slot $SLOT does not exist. Creating it..."
-    git clone "$MAIN_WORKSPACE" "$CLONE_PATH"
+    git clone "$REPO_ADDRESS" "$CLONE_PATH"
     cd "$CLONE_PATH"
     bd init
 
@@ -67,9 +68,18 @@ if [ -n "$(git status --porcelain)" ]; then
     fi
 fi
 
-# Sync with main
-git checkout main
-git pull origin main
+# Sync with main (beads-aware)
+# If beads is initialized, main is in a separate worktree
+if [ -d .git/beads-worktrees/main ]; then
+    echo "📥 Syncing main branch (beads worktree)..."
+    (cd .git/beads-worktrees/main && git pull origin main)
+    # Fetch to update our local knowledge of remote branches
+    git fetch origin
+else
+    # Standard git checkout for non-beads repos
+    git checkout main
+    git pull origin main
+fi
 
 # Report port configuration
 if [ -f .env.local ]; then
@@ -77,8 +87,14 @@ if [ -f .env.local ]; then
     echo "   Port: $PORT_NUMBER"
 fi
 
-# Create feature branch
-git checkout -b "$BRANCH_NAME"
+# Create feature branch from current HEAD or latest main
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$CURRENT_BRANCH" == "main" ]; then
+    git checkout -b "$BRANCH_NAME"
+else
+    # We're on a feature branch, create new branch from main
+    git checkout -b "$BRANCH_NAME" main
+fi
 
 # Claim the issue
 echo ""
