@@ -54,6 +54,8 @@ jobs:
           bd close ${{ steps.extract-issue.outputs.issue_id }} \
             --reason "PR #${{ github.event.pull_request.number }} merged" \
             --json
+          # Immediately flush changes to issues.jsonl (bypass 5s debounce)
+          bd sync
 
       - name: Commit updated beads database
         if: steps.extract-issue.outputs.issue_id != ''
