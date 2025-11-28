@@ -1,5 +1,25 @@
 # AGENTS.md
 
+## 🚨 CRITICAL: Feature Branch Workflow 🚨
+
+**YOU MUST NEVER COMMIT DIRECTLY TO MAIN**
+
+Before starting ANY work:
+1. ✅ Create branch: `git checkout -b feature/fp-<id>-description`
+2. ✅ Do your work
+3. ✅ Run `npm run lint` and `npm run type-check` - both MUST pass
+4. ✅ Mark issue as blocked: `bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."`
+5. ✅ Commit to feature branch (includes .beads/issues.jsonl)
+6. ✅ Push branch: `git push -u origin feature/fp-<id>-description`
+7. ✅ Create PR for human review
+8. ❌ NEVER merge to main yourself
+
+**If you find yourself on main branch, STOP and create a feature branch first.**
+
+See [Workflow for AI Agents](#workflow-for-ai-agents) below for additional details.
+
+---
+
 ## Issue Tracking with bd (beads)
 
 **IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.

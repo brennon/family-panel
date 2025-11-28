@@ -10,6 +10,55 @@ Family Panel is a new project currently in the early setup phase. The codebase u
 
 **Parallel Agent Support**: This project supports running multiple AI agents in parallel on different issues using separate repository clones. See [PARALLEL_AGENTS.md](./PARALLEL_AGENTS.md) for details.
 
+## 🚨 MANDATORY WORKFLOW - READ THIS FIRST 🚨
+
+**CRITICAL**: Never commit directly to main. Always follow this workflow:
+
+1. **Create a branch** for EVERY issue:
+   ```bash
+   git checkout -b feature/fp-<issue-id>-<short-description>
+   ```
+
+2. **Do your work** on the feature branch
+
+3. **Run quality checks** (REQUIRED before committing):
+   ```bash
+   npm run lint        # Must pass
+   npm run type-check  # Must pass
+   ```
+
+4. **Mark issue as blocked** pending review:
+   ```bash
+   bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."
+   ```
+
+5. **Commit your changes** (includes .beads/issues.jsonl with blocked status):
+   ```bash
+   git add .
+   git commit -m "feat(scope): description [fp-<id>]"
+   ```
+
+6. **Push your branch**:
+   ```bash
+   git push -u origin feature/fp-<id>-description
+   ```
+
+7. **Create a PR** for human review:
+   ```bash
+   gh pr create --title "feat: description [fp-<id>]" --body "description"
+   ```
+
+8. **Never merge to main yourself** - wait for human approval
+
+❌ **DO NOT**:
+- Commit directly to main
+- Push to main
+- Skip lint/type-check
+- Merge PRs yourself
+- Close issues before PR is merged
+
+See [AGENTS.md](./AGENTS.md) for complete workflow details.
+
 ## Technology Stack
 
 - **Framework**: Next.js 16 (App Router, Turbopack)
