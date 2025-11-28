@@ -44,7 +44,7 @@ jobs:
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           # Extract issue ID like [family-panel-4ci] from PR title
-          ISSUE_ID=$(echo "$PR_TITLE" | grep -oP '\[family-panel-[a-z0-9]+\]' | tr -d '[]')
+          ISSUE_ID=$(echo "$PR_TITLE" | grep -oP '\[fp-[a-z0-9]+\]' | tr -d '[]')
           echo "issue_id=$ISSUE_ID" >> $GITHUB_OUTPUT
 
           if [ -z "$ISSUE_ID" ]; then
