@@ -11,6 +11,9 @@ jobs:
     # Only run if PR was actually merged (not just closed)
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     env:
       BEADS_DIR: ${{ github.workspace }}/.beads
 
