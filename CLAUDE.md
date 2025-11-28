@@ -97,7 +97,17 @@ npm run lint
 /lib               # Utility functions and helpers
 /services          # API clients and external service integrations
 /types             # TypeScript type definitions
+/supabase          # Database migrations and Supabase setup
+  /migrations      # SQL migration files (numbered)
 ```
+
+## Database Migrations
+
+**IMPORTANT**: When creating database migrations:
+- Store SQL files in `supabase/migrations/` with numbered prefixes (e.g., `001_initial_schema.sql`)
+- Migrations are **NOT automatically applied** - they must be run manually in Supabase
+- Include migration instructions in PR description
+- See `docs/DEPLOYMENT.md` for complete migration workflow
 
 ## Adding shadcn/ui Components
 
