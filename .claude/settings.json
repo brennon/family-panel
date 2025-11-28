@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(bd sync:*)",
       "Bash(cat:*)",
       "Bash(gh pr create:*)",
       "Bash(git add:*)",
@@ -11,14 +12,18 @@
       "Bash(git push:*)",
       "Bash(git rebase:*)",
       "Bash(mkdir:*)",
-      "mcp__beads__set_context",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(test:*)",
+      "mcp__beads__create",
       "mcp__beads__list",
+      "mcp__beads__set_context",
       "mcp__beads__stats",
+      "mcp__beads__show",
+      "mcp__beads__update",
+      "mcp__beads__where_am_i",
       "mcp__fetch__fetch_markdown",
       "mcp__github__create_pull_request",
-      "mcp__beads__where_am_i",
-      "mcp__beads__create",
-      "mcp__beads__update",
       "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": [],
