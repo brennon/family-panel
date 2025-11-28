@@ -80,6 +80,10 @@ bd close bd-42 --reason "Completed" --json
    - Examples: `feature/family-panel-5-chore-service`, `fix/family-panel-12-timer-bug`
    - Use git: `git checkout -b feature/family-panel-5-chore-service`
 4. **Work on it**: Implement, test, document
+   - If creating database migrations:
+     - Place SQL files in `supabase/migrations/` with numbered prefixes
+     - Document what the migration does in the PR description
+     - Note that migrations must be applied manually to Supabase (see docs/DEPLOYMENT.md)
 5. **Discover new work?** Create linked issue:
    - `bd create "Found bug" -p 1 --deps discovered-from:<parent-id>`
 6. **Sync before finalizing**: Before committing your final changes, pull latest from main and rebase
@@ -112,6 +116,7 @@ bd close bd-42 --reason "Completed" --json
    - **IMPORTANT**: Include issue ID in PR title in brackets (e.g., `feat: add feature [family-panel-5]`)
    - The bracketed issue ID enables automatic closure when PR is merged
    - Describe changes, testing done, and any review notes in PR body
+   - **If PR includes database migrations**: Add migration instructions to PR description (see docs/DEPLOYMENT.md for template)
 12. **Automatic closure**: When human merges the PR, a GitHub Action will automatically:
    - Extract the issue ID from PR title
    - Close the beads issue with reason "PR #<number> merged"

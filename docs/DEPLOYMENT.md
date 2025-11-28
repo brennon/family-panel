@@ -79,11 +79,72 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
+## Database Migrations
+
+**IMPORTANT**: Supabase database migrations are **NOT automatically applied** by Vercel or GitHub Actions.
+
+### When to Apply Migrations
+
+Migrations must be manually applied to the Supabase database **BEFORE** deploying code that depends on schema changes:
+
+1. **Before merging PRs with migrations**: Apply migrations to production Supabase before merging
+2. **For preview environments**: Apply to preview database (if using separate Supabase project)
+3. **For development**: Apply to your development Supabase project
+
+### How to Apply Migrations
+
+**Option 1: Supabase SQL Editor (Recommended)**
+1. Go to [Supabase Dashboard](https://app.supabase.com)
+2. Navigate to SQL Editor
+3. Run migration files from `supabase/migrations/` in order
+4. Verify migrations applied successfully
+
+**Option 2: Supabase CLI**
+```bash
+# Install CLI
+npm install -g supabase
+
+# Link to project
+supabase link --project-ref your-project-ref
+
+# Push migrations
+supabase db push
+```
+
+### Migration Workflow for PRs
+
+When a PR includes new migrations:
+
+1. **PR Author**: Note in PR description that migrations are required
+2. **Reviewer**: Apply migrations to production database BEFORE merging
+3. **After applying**: Verify migration success in Supabase dashboard
+4. **Then merge**: Deploy application code via Vercel
+
+**Example PR description:**
+```markdown
+## Database Migrations Required
+
+This PR includes new migrations in `supabase/migrations/`:
+- `003_add_notifications_table.sql`
+
+**Action Required Before Merge:**
+1. Apply migration to production Supabase via SQL Editor
+2. Verify migration applied successfully
+3. Then merge this PR
+```
+
+### Migration Files Location
+
+All migrations are stored in: `supabase/migrations/`
+
+See `supabase/README.md` for detailed migration documentation.
+
 ## Deployment Checklist
 
 Before your first deployment:
 
 - [ ] Supabase project created with database schema (fp-6)
+- [ ] Initial migrations applied to Supabase (see above)
 - [ ] Environment variables added to Vercel
 - [ ] Repository connected to Vercel
 - [ ] Initial deployment successful
