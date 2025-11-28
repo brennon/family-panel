@@ -70,10 +70,15 @@ bd close bd-42 --reason "Completed" --json
      - For `.beads/issues.jsonl`: the beads merge driver should handle automatically, but if manual resolution needed, preserve both issue updates
      - After resolving: `git add .` and `git rebase --continue`
    - This ensures your changes apply cleanly on top of latest main
-7. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
+7. **Run quality checks**: **REQUIRED** before closing any issue
+   - `npm run lint` - Must pass with no errors
+   - `npm run type-check` - Must pass with no errors
+   - Fix any issues before proceeding
+   - This ensures code quality and prevents broken builds
+8. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
    - `bd update <id> --status blocked --notes "Waiting for PR review. Work complete: <brief summary of changes>"`
    - This signals the issue is done but needs human approval before closing
-8. **Commit with Conventional Commits**: Use clear, conventional commit messages
+9. **Commit with Conventional Commits**: Use clear, conventional commit messages
    - Format: `<type>(<scope>): <subject> [<issue-id>]`
    - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
    - Examples:
@@ -81,13 +86,13 @@ bd close bd-42 --reason "Completed" --json
      - `fix(timer): correct remaining time calculation [family-panel-13]`
      - `docs(readme): update installation instructions [family-panel-1]`
    - Always include the issue ID in brackets at the end
-9. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
-10.  **Create pull request**: Use GitHub CLI to create PR for review
+10. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
+11. **Create pull request**: Use GitHub CLI to create PR for review
    - Use with appropriate title and description (e.g., `gh pr create --title "feat: add feature [family-panel-5]" --body <PR DESCRIPTION>`)
    - **IMPORTANT**: Include issue ID in PR title in brackets (e.g., `feat: add feature [family-panel-5]`)
    - The bracketed issue ID enables automatic closure when PR is merged
    - Describe changes, testing done, and any review notes in PR body
-11. **Automatic closure**: When human merges the PR, a GitHub Action will automatically:
+12. **Automatic closure**: When human merges the PR, a GitHub Action will automatically:
    - Extract the issue ID from PR title
    - Close the beads issue with reason "PR #<number> merged"
    - Commit the updated `.beads/issues.jsonl` back to main
@@ -141,6 +146,7 @@ history/
 - ✅ Store AI planning docs in `history/` directory
 - ✅ Create a new branch for each issue
 - ✅ Use Conventional Commits format with issue IDs
+- ✅ **Run `npm run lint` and `npm run type-check` before closing any issue**
 - ✅ Push branches for human review before merging
 - ❌ Do NOT create markdown TODO lists
 - ❌ Do NOT use external issue trackers
