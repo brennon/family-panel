@@ -34,6 +34,11 @@ jobs:
           cd ${{ github.workspace }}
           bd init
 
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Extract issue ID from PR title
         id: extract-issue
         run: |
@@ -60,9 +65,6 @@ jobs:
       - name: Commit updated beads database
         if: steps.extract-issue.outputs.issue_id != ''
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
           # Add the updated issues file
           git add .beads/issues.jsonl
 
