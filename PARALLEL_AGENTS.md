@@ -74,19 +74,19 @@ mkdir ~/Projects/family-panel-workers
 cd ~/Projects/family-panel-workers
 
 # Clone for agent slot 1
-git clone ~/Projects/family-panel agent-1
+git clone https://github.com/brennon/family-panel.git agent-1
 cd agent-1
 bd init
 cd ..
 
 # Clone for agent slot 2
-git clone ~/Projects/family-panel agent-2
+git clone https://github.com/brennon/family-panel.git agent-2
 cd agent-2
 bd init
 cd ..
 
 # Clone for agent slot 3 (optional)
-git clone ~/Projects/family-panel agent-3
+git clone https://github.com/brennon/family-panel.git agent-3
 cd agent-3
 bd init
 ```
@@ -129,7 +129,7 @@ code .
 You are working on issue bd-a1b2 in a dedicated clone.
 
 Before starting work:
-1. Verify you're on the feature/bd-a1b2-short-description branch
+1. Verify you're on the feature/bd-a1b2-short-description branch (create it if it doesn't yet exist and/or switch to it if necessaru)
 2. Run: bd show bd-a1b2
 3. Work on the issue, committing code + .beads/issues.jsonl together
 
