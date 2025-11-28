@@ -70,7 +70,10 @@ bd close bd-42 --reason "Completed" --json
      - For `.beads/issues.jsonl`: the beads merge driver should handle automatically, but if manual resolution needed, preserve both issue updates
      - After resolving: `git add .` and `git rebase --continue`
    - This ensures your changes apply cleanly on top of latest main
-7. **Commit with Conventional Commits**: Use clear, conventional commit messages
+7. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
+   - `bd update <id> --status blocked --notes "Waiting for PR review. Work complete: <brief summary of changes>"`
+   - This signals the issue is done but needs human approval before closing
+8. **Commit with Conventional Commits**: Use clear, conventional commit messages
    - Format: `<type>(<scope>): <subject> [<issue-id>]`
    - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
    - Examples:
@@ -78,11 +81,8 @@ bd close bd-42 --reason "Completed" --json
      - `fix(timer): correct remaining time calculation [family-panel-13]`
      - `docs(readme): update installation instructions [family-panel-1]`
    - Always include the issue ID in brackets at the end
-8. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
-9. **Mark as blocked pending review**: Update issue status to indicate work is complete but awaiting human review
-   - `bd update <id> --status blocked --notes "Waiting for PR review. Work complete: <brief summary of changes>"`
-   - This signals the issue is done but needs human approval before closing
-10. **Create pull request**: Use GitHub CLI to create PR for review
+9. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
+10.  **Create pull request**: Use GitHub CLI to create PR for review
    - Use with appropriate title and description (e.g., `gh pr create --title "feat: add feature [family-panel-5]" --body <PR DESCRIPTION>`)
    - **IMPORTANT**: Include issue ID in PR title in brackets (e.g., `feat: add feature [family-panel-5]`)
    - The bracketed issue ID enables automatic closure when PR is merged
