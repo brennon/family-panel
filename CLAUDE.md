@@ -89,6 +89,45 @@ npm run type-check
 npm run lint
 ```
 
+## Visual Debugging with Playwright MCP
+
+This project includes the Playwright MCP server for visual debugging and UI testing.
+
+### When to Use Playwright
+- Debugging UI issues or layout problems
+- Verifying implementation of interactive features
+- Testing user workflows end-to-end
+- Capturing screenshots for documentation
+
+### How to Use
+1. **Start the dev server** in background:
+   ```bash
+   npm run dev &  # Runs on port 3001 for agent-1, 3002 for agent-2, etc.
+   ```
+
+2. **Use Playwright MCP tools** to interact with the app:
+   - `mcp__playwright__browser_navigate` - Navigate to http://localhost:300N
+   - `mcp__playwright__browser_snapshot` - Get accessibility tree (preferred)
+   - `mcp__playwright__browser_take_screenshot` - Visual screenshot
+   - `mcp__playwright__browser_click` - Click elements
+   - `mcp__playwright__browser_type` - Type text
+   - See full tool list with `/help mcp`
+
+3. **Clean up when done**:
+   ```bash
+   # Find and kill the dev server process
+   lsof -ti:3001 | xargs kill
+   ```
+
+### Port Assignments (Parallel Agents)
+Each agent clone uses a dedicated port to avoid conflicts:
+- Main workspace: `http://localhost:3000`
+- agent-1: `http://localhost:3001`
+- agent-2: `http://localhost:3002`
+- agent-3: `http://localhost:3003`
+
+Port is configured via `.env.local` (see PARALLEL_AGENTS.md for setup).
+
 ## Project Structure
 
 ```

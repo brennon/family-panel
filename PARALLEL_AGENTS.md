@@ -77,19 +77,24 @@ cd ~/Projects/family-panel-workers
 git clone https://github.com/brennon/family-panel.git agent-1
 cd agent-1
 bd init
+echo "PORT=3001" > .env.local
 cd ..
 
 # Clone for agent slot 2
 git clone https://github.com/brennon/family-panel.git agent-2
 cd agent-2
 bd init
+echo "PORT=3002" > .env.local
 cd ..
 
 # Clone for agent slot 3 (optional)
 git clone https://github.com/brennon/family-panel.git agent-3
 cd agent-3
 bd init
+echo "PORT=3003" > .env.local
 ```
+
+**Port Configuration**: Each agent clone gets a dedicated port to avoid conflicts when running dev servers simultaneously. The port is stored in `.env.local` which Next.js automatically reads.
 
 ## Daily Workflow
 
