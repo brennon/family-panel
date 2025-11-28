@@ -161,11 +161,11 @@ claude-code
 ### 4. Agent Completes Work
 
 The agent will:
-1. Commit changes with conventional commits format
-2. Mark issue as blocked pending review:
+1. Mark issue as blocked pending review:
    ```bash
    bd update bd-a1b2 --status blocked --notes "Waiting for PR review. Work complete: <summary>"
    ```
+2. Commit changes with conventional commits format
 3. Create pull request using GitHub MCP:
    ```bash
    # Use mcp__github__create_pull_request
