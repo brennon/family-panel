@@ -14,6 +14,8 @@
       "Bash(mkdir:*)",
       "Bash(npm install)",
       "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)",
       "Bash(test:*)",
       "mcp__beads__create",
       "mcp__beads__list",
