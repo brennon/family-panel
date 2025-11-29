@@ -71,20 +71,14 @@ jobs:
   e2e-tests:
     name: E2E Tests
 
-    # WebKit requires CPU rendering in CI to avoid libEGL GPU compatibility issues
-    # Issue: Ubuntu (both 22.04 and 24.04) has webkit WPE headless backend issues
-    # that cause .fill() and .click() to timeout in CI (works locally).
-    # Solution: Force CPU rendering with LIBGL_ALWAYS_SOFTWARE=true
-    # See: https://github.com/microsoft/playwright/issues/33057
-    #      https://github.com/microsoft/playwright/issues/32151#issuecomment-2305354421
-    # Note: This affects all browsers in CI but primarily fixes webkit. Performance
-    # impact is acceptable (~10-20s vs timeout failures).
+    # WebKit is disabled in CI due to unfixable compatibility issues
+    # Issue: Webkit parent email/password login consistently times out in CI
+    # (works perfectly locally). See playwright.config.ts for attempted fixes.
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      LIBGL_ALWAYS_SOFTWARE: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
