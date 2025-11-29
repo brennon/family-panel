@@ -1,6 +1,30 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth/context';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect authenticated users to dashboard
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
@@ -11,7 +35,9 @@ export default function Home() {
           Family organization and coordination platform
         </p>
         <div className="flex justify-center gap-4">
-          <Button>Get Started</Button>
+          <Link href="/login">
+            <Button>Sign In</Button>
+          </Link>
           <Button variant="outline">Learn More</Button>
         </div>
       </div>

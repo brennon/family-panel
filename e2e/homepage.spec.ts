@@ -1,6 +1,22 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Homepage', () => {
+  test.beforeEach(async ({ context }) => {
+    // Clear all cookies and storage to ensure test isolation
+    await context.clearCookies();
+  });
+
+  test.afterEach(async ({ page, context }) => {
+    // Clear all cookies and storage
+    await context.clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    }).catch(() => {
+      // Ignore errors if page is closed
+    });
+  });
+
   test('should load and display welcome message', async ({ page }) => {
     // Navigate to the homepage
     await page.goto('/');
@@ -17,11 +33,11 @@ test.describe('Homepage', () => {
     await page.goto('/');
 
     // Check that both buttons are visible and enabled
-    const getStartedButton = page.getByRole('button', { name: 'Get Started' });
+    const signInButton = page.getByRole('button', { name: 'Sign In' });
     const learnMoreButton = page.getByRole('button', { name: 'Learn More' });
 
-    await expect(getStartedButton).toBeVisible();
-    await expect(getStartedButton).toBeEnabled();
+    await expect(signInButton).toBeVisible();
+    await expect(signInButton).toBeEnabled();
 
     await expect(learnMoreButton).toBeVisible();
     await expect(learnMoreButton).toBeEnabled();

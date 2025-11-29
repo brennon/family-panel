@@ -25,6 +25,8 @@ Family Panel is a new project currently in the early setup phase. The codebase u
    ```bash
    npm run lint        # Must pass
    npm run type-check  # Must pass
+   npm run test        # Must pass
+   npm run test:e2e    # Must pass
    ```
 
 4. **Mark issue as blocked** pending review:

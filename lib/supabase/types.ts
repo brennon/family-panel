@@ -24,6 +24,7 @@ export interface Database {
           name: string;
           role: UserRole;
           screen_time_daily_minutes: number;
+          pin_hash: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +34,7 @@ export interface Database {
           name: string;
           role: UserRole;
           screen_time_daily_minutes?: number;
+          pin_hash?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -42,6 +44,7 @@ export interface Database {
           name?: string;
           role?: UserRole;
           screen_time_daily_minutes?: number;
+          pin_hash?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -206,6 +209,14 @@ export interface Database {
       };
       is_parent: {
         Args: { user_id: string };
+        Returns: boolean;
+      };
+      validate_kid_pin: {
+        Args: { p_user_id: string; p_pin: string };
+        Returns: boolean;
+      };
+      set_kid_pin: {
+        Args: { p_user_id: string; p_pin: string };
         Returns: boolean;
       };
     };

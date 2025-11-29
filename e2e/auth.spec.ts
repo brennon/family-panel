@@ -1,88 +1,174 @@
 import { test, expect } from '@playwright/test';
+import { getTestUsers } from './fixtures/test-users';
 
 /**
  * Authentication E2E tests
+ * Tests the complete authentication flows for parents and kids
  *
- * These tests are placeholders for future authentication implementation.
- * They will be fully implemented when fp-7 (authentication) is complete.
+ * PREREQUISITES:
+ * 1. Wipe database completely
+ * 2. Run all migrations in order:
+ *    - 001_initial_schema.sql
+ *    - 002_row_level_security.sql
+ *    - 003_add_kid_pin.sql
+ *    - 004_add_family_relationships.sql
+ *    - 005_seed_test_data.sql
+ *    - 006_grant_permissions.sql
+ *    - 007_add_browser_specific_test_users.sql
+ * 3. Ensure .env.local has SUPABASE_SERVICE_ROLE_KEY set
+ *
+ * Test users: Each browser gets unique users to prevent cross-browser interference
+ * Created by migrations 005 (shared) and 007 (browser-specific)
  */
 test.describe('Authentication', () => {
-  test.skip('should allow parent to login with email/password', async ({ page }) => {
-    // TODO: Implement when authentication is set up (fp-7)
-    // Expected flow:
-    // 1. Navigate to /login
-    // 2. Fill in email and password fields
-    // 3. Click login button
-    // 4. Verify redirect to dashboard
-    // 5. Verify user session is established
-
+  test.beforeEach(async ({ page, context }) => {
+    // Clear all cookies and storage to ensure test isolation
+    await context.clearCookies();
     await page.goto('/login');
+  });
 
-    await page.fill('input[name="email"]', 'parent@example.com');
-    await page.fill('input[name="password"]', 'secure-password');
-    await page.click('button[type="submit"]');
+  test.afterEach(async ({ page, context }) => {
+    // Clean up: clear all auth state
+    try {
+      // Clear all cookies and storage
+      await context.clearCookies();
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+    } catch {
+      // Ignore errors if page is closed or navigation failed
+    }
+  });
 
-    // Should redirect to parent dashboard
+  test('parent can log in with email and password', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
+    // Fill in parent login form
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
+
+    // Submit form and wait for navigation
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
+
+    // Should show parent's name
+    const nameRegex = new RegExp(users.parent.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('kid can log in with PIN', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
+    // Switch to kid login
+    await page.getByRole('button', { name: /kid login/i }).click();
+
+    // Wait for kid form to be visible
+    await expect(page.getByLabel(/your name/i)).toBeVisible();
+
+    // Fill in kid login form
+    await page.getByLabel(/your name/i).fill(users.kid1.id);
+    await page.getByLabel(/pin code/i).fill(users.kid1.pin);
+
+    // Submit form
+    await page.getByRole('button', { name: /sign in/i }).click();
+
+    // Should redirect to dashboard (dashboard can take 10-30s to load in dev mode)
+    await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+
+    // Should show kid's name (use first() to handle multiple matches)
+    const nameRegex = new RegExp(users.kid1.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible();
+  });
+
+  test('session persists after page refresh', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
+    // Log in as parent
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
+
+    // Submit form and wait for navigation
+    // WebKit needs both URL change and load state wait
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
+
+    // Wait for user data to load
+    const nameRegex = new RegExp(users.parent.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
+
+    // Refresh page
+    await page.reload();
+
+    // Wait for page to finish loading (don't use networkidle - Supabase keeps connections open)
+    await page.waitForLoadState('domcontentloaded');
+
+    // Check we're still on dashboard (session persisted)
     await expect(page).toHaveURL('/dashboard');
 
-    // Should show parent-specific content
-    await expect(page.getByText('Parent Dashboard')).toBeVisible();
+    // User name should eventually appear (may take a moment for profile to load)
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test.skip('should allow kid to login with PIN', async ({ page }) => {
-    // TODO: Implement when authentication is set up (fp-7)
-    // Expected flow:
-    // 1. Navigate to /login
-    // 2. Switch to kid login mode
-    // 3. Enter 4-digit PIN
-    // 4. Verify redirect to kid dashboard
-    // 5. Verify kid session is established
+  test('invalid PIN shows error', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
 
-    await page.goto('/login');
+    // Switch to kid login
+    await page.getByRole('button', { name: /kid login/i }).click();
 
-    await page.click('button:has-text("Kid Login")');
-    await page.fill('input[name="pin"]', '1234');
-    await page.click('button[type="submit"]');
+    // Wait for kid form to be visible
+    await expect(page.getByLabel(/your name/i)).toBeVisible();
 
-    // Should redirect to kid dashboard
-    await expect(page).toHaveURL('/kid-dashboard');
+    // Fill in with wrong PIN
+    await page.getByLabel(/your name/i).fill(users.kid1.id);
+    await page.getByLabel(/pin code/i).fill('9999');
 
-    // Should show kid-specific content
-    await expect(page.getByText('My Chores')).toBeVisible();
+    // Submit form
+    await page.getByRole('button', { name: /sign in/i }).click();
+
+    // Should show error (API returns "Invalid PIN or user ID")
+    await expect(page.getByText(/invalid pin or user id/i)).toBeVisible();
+
+    // Should stay on login page
+    await expect(page).toHaveURL('/login');
   });
 
-  test.skip('should protect authenticated routes', async ({ page }) => {
-    // TODO: Implement when authentication is set up (fp-7)
-    // Verify that protected routes redirect to login when not authenticated
-
+  test('protected routes redirect to login', async ({ page }) => {
+    // Try to access dashboard without logging in
     await page.goto('/dashboard');
 
     // Should redirect to login
-    await expect(page).toHaveURL('/login');
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test.skip('should handle logout correctly', async ({ page }) => {
-    // TODO: Implement when authentication is set up (fp-7)
-    // Expected flow:
-    // 1. Login as user
-    // 2. Click logout button
-    // 3. Verify redirect to homepage
-    // 4. Verify session is cleared
+  test('sign out works correctly', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
 
-    // Login first
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'parent@example.com');
-    await page.fill('input[name="password"]', 'secure-password');
-    await page.click('button[type="submit"]');
+    // Log in
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
 
-    // Logout
-    await page.click('button:has-text("Logout")');
+    // Submit form and wait for navigation
+    // WebKit needs both URL change and load state wait
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
 
-    // Should redirect to homepage
-    await expect(page).toHaveURL('/');
+    // Sign out and wait for navigation
+    await Promise.all([
+      page.waitForURL('/login', { timeout: 10000 }),
+      page.getByRole('button', { name: /sign out/i }).click(),
+    ]);
 
-    // Trying to access protected route should redirect to login
-    await page.goto('/dashboard');
+    // Should be on login page
     await expect(page).toHaveURL('/login');
+
+    // Try to access dashboard
+    await page.goto('/dashboard');
+
+    // Should be redirected back to login
+    await expect(page).toHaveURL(/\/login/);
   });
 });

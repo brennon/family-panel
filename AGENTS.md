@@ -8,11 +8,12 @@ Before starting ANY work:
 1. ✅ Create branch: `git checkout -b feature/fp-<id>-description`
 2. ✅ Do your work
 3. ✅ Run `npm run lint` and `npm run type-check` - both MUST pass
-4. ✅ Mark issue as blocked: `bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."`
-5. ✅ Commit to feature branch (includes .beads/issues.jsonl)
-6. ✅ Push branch: `git push -u origin feature/fp-<id>-description`
-7. ✅ Create PR for human review
-8. ❌ NEVER merge to main yourself
+4. ✅ Run `npm run test` and `npm run test:e2e` - both MUST pass
+5. ✅ Mark issue as blocked: `bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."`
+6. ✅ Commit to feature branch (includes .beads/issues.jsonl)
+7. ✅ Push branch: `git push -u origin feature/fp-<id>-description`
+8. ✅ Create PR for human review
+9. ❌ NEVER merge to main yourself
 
 **If you find yourself on main branch, STOP and create a feature branch first.**
 
