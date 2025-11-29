@@ -42,9 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[Auth] Fetching profile for user:', authUser.id);
       const startTime = Date.now();
 
-      // Increase timeout to 10 seconds for production environments
+      // Increase timeout to 30 seconds for E2E test environments
+      // Some browsers in Playwright are slower to establish Supabase connections
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout after 10s')), 10000);
+        setTimeout(() => reject(new Error('Profile fetch timeout after 30s')), 30000);
       });
 
       const queryPromise = supabase
@@ -117,9 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set a timeout to prevent infinite loading state
     const timeout = setTimeout(() => {
-      console.warn('Auth initialization timed out after 10s');
+      console.warn('Auth initialization timed out after 30s');
       setLoading(false);
-    }, 10000);
+    }, 30000);
 
     initAuth().finally(() => clearTimeout(timeout));
 
