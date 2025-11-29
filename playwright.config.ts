@@ -54,32 +54,10 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    // WebKit browsers: Enabled locally, disabled in CI
-    // Issue fp-8j9: WebKit parent email/password login fails in CI
-    //
-    // EXTENSIVE INVESTIGATION COMPLETED:
-    // - Works perfectly locally (100% pass rate across all tests)
-    // - WebKit kid PIN login works in CI (different code path)
-    // - Chromium/Firefox parent login works in CI (same code)
-    //
-    // ROOT CAUSE: Playwright .fill() doesn't commit email input value in webkit CI
-    // - Even with 100ms delays, email input remains empty
-    // - React state empty, DOM value empty
-    // - Specific to email/password inputs in webkit + GitHub Actions environment
-    //
-    // Tried fixes:
-    // 1. Sequential waits vs Promise.all ❌
-    // 2. onClick instead of form submit ❌
-    // 3. Read from React state ❌
-    // 4. Read from DOM with getElementById ❌
-    // 5. Added 100ms delay before reading ❌
-    //
-    // Conclusion: webkit + Playwright + GitHub Actions compatibility issue
-    // Recommendation: Test webkit locally, skip in CI until Playwright fixes this
-    ...(!process.env.CI ? [{
+    {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-    }] : []),
+    },
 
     // Mobile viewports
     {
@@ -87,10 +65,10 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
 
-    ...(!process.env.CI ? [{
+    {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-    }] : []),
+    },
   ],
 
   // Run your local dev server before starting the tests

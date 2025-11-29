@@ -71,8 +71,11 @@ jobs:
   e2e-tests:
     name: E2E Tests
 
-    # Ubuntu 24.04 (what ubuntu-latest pointed to at the time of this change) causes issues
-    # when running tests using WebKit. https://github.com/microsoft/playwright/issues/33057
+    # Ubuntu 22.04 required for WebKit compatibility
+    # Issue: Ubuntu 24.04 has webkit WPE headless backend issues that cause
+    # .fill() and .click() to fail in CI (works locally). Ubuntu 22.04 works fine.
+    # See: https://github.com/microsoft/playwright/issues/33057
+    #      https://github.com/microsoft/playwright/issues/32151
     runs-on: ubuntu-22.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
