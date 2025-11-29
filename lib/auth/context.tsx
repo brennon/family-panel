@@ -98,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
+    let isInitialized = false;
 
     // Set a timeout to prevent infinite loading state
     const timeout = setTimeout(() => {
@@ -113,6 +114,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('[Auth] State change:', event);
         if (!mounted) return;
 
+        // Only handle INITIAL_SESSION for the first load, ignore early SIGNED_IN
+        if (!isInitialized) {
+          if (event !== 'INITIAL_SESSION') {
+            console.log('[Auth] Ignoring', event, 'during initialization');
+            return;
+          }
+          isInitialized = true;
+        }
+
         if (session?.user) {
           const userWithProfile = await fetchUserProfile(session.user);
           if (mounted) {
@@ -127,29 +137,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     );
-
-    // Also check current session (for initial page load)
-    // This runs after onAuthStateChange is set up
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-
-      if (session?.user) {
-        fetchUserProfile(session.user).then(userWithProfile => {
-          if (mounted) {
-            setUser(userWithProfile);
-            setLoading(false);
-          }
-        }).catch(error => {
-          console.error('[Auth] Error in getSession profile fetch:', error);
-          if (mounted) {
-            setLoading(false);
-          }
-        });
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
 
     return () => {
       mounted = false;
