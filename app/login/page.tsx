@@ -28,27 +28,18 @@ function LoginForm() {
     setError('');
     setLoading(true);
 
-    console.log('[Login] Parent login started', { email, redirectTo });
-
     try {
-      console.log('[Login] Calling signIn...');
       const { error } = await signIn(email, password);
-      console.log('[Login] signIn completed', { error: error?.message });
 
       if (error) {
-        console.log('[Login] Login failed:', error.message);
         setError(error.message);
       } else {
-        console.log('[Login] Login successful, navigating to:', redirectTo);
         router.push(redirectTo);
-        console.log('[Login] router.push called');
       }
     } catch (err) {
-      console.error('[Login] Unexpected error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
-      console.log('[Login] Parent login completed');
     }
   };
 
@@ -142,55 +133,7 @@ function LoginForm() {
                   autoComplete="current-password"
                 />
               </div>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={loading}
-                onClick={async (e) => {
-                  // Webkit fallback: Read values from DOM directly (state may not be updated yet)
-                  e.preventDefault();
-                  console.log('[Login] Button onClick triggered');
-
-                  if (loading) return;
-
-                  // Small delay to ensure input values are committed to DOM (webkit timing issue)
-                  await new Promise(resolve => setTimeout(resolve, 100));
-
-                  // Read values directly from inputs to avoid React state timing issues
-                  const emailInput = document.getElementById('email') as HTMLInputElement;
-                  const passwordInput = document.getElementById('password') as HTMLInputElement;
-                  const emailValue = emailInput?.value || '';
-                  const passwordValue = passwordInput?.value || '';
-
-                  console.log('[Login] Values from DOM:', { email: emailValue, hasPassword: !!passwordValue });
-
-                  setError('');
-                  setLoading(true);
-
-                  console.log('[Login] Parent login started', { email: emailValue, redirectTo });
-
-                  try {
-                    console.log('[Login] Calling signIn...');
-                    const { error: signInError } = await signIn(emailValue, passwordValue);
-                    console.log('[Login] signIn completed', { error: signInError?.message });
-
-                    if (signInError) {
-                      console.log('[Login] Login failed:', signInError.message);
-                      setError(signInError.message);
-                    } else {
-                      console.log('[Login] Login successful, navigating to:', redirectTo);
-                      router.push(redirectTo);
-                      console.log('[Login] router.push called');
-                    }
-                  } catch (err) {
-                    console.error('[Login] Unexpected error:', err);
-                    setError('An unexpected error occurred');
-                  } finally {
-                    setLoading(false);
-                    console.log('[Login] Parent login completed');
-                  }
-                }}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>

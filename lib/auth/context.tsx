@@ -148,40 +148,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with email/password (for parents)
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('[Auth] signIn: Starting signInWithPassword for:', email);
-      const startTime = Date.now();
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      const elapsed = Date.now() - startTime;
-      console.log(`[Auth] signIn: signInWithPassword completed in ${elapsed}ms`, {
-        hasUser: !!data.user,
-        hasError: !!error,
-        errorMessage: error?.message,
-      });
-
       if (error) {
-        console.log('[Auth] signIn: Returning error:', error.message);
         return { error };
       }
 
       if (data.user) {
-        console.log('[Auth] signIn: Fetching user profile for:', data.user.id);
-        const profileStartTime = Date.now();
         const userWithProfile = await fetchUserProfile(data.user);
-        const profileElapsed = Date.now() - profileStartTime;
-        console.log(`[Auth] signIn: Profile fetch completed in ${profileElapsed}ms`);
         setUser(userWithProfile);
-        console.log('[Auth] signIn: User state updated');
       }
 
-      console.log('[Auth] signIn: Success, returning null error');
       return { error: null };
     } catch (error) {
-      console.error('[Auth] signIn: Caught exception:', error);
       return { error: error as Error };
     }
   };
