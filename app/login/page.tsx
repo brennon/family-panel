@@ -147,20 +147,31 @@ function LoginForm() {
                 className="w-full"
                 disabled={loading}
                 onClick={async (e) => {
-                  // Webkit fallback: Use button click instead of form submit
+                  // Webkit fallback: Read values from DOM directly (state may not be updated yet)
                   e.preventDefault();
                   console.log('[Login] Button onClick triggered');
 
                   if (loading) return;
 
+                  // Small delay to ensure input values are committed to DOM (webkit timing issue)
+                  await new Promise(resolve => setTimeout(resolve, 100));
+
+                  // Read values directly from inputs to avoid React state timing issues
+                  const emailInput = document.getElementById('email') as HTMLInputElement;
+                  const passwordInput = document.getElementById('password') as HTMLInputElement;
+                  const emailValue = emailInput?.value || '';
+                  const passwordValue = passwordInput?.value || '';
+
+                  console.log('[Login] Values from DOM:', { email: emailValue, hasPassword: !!passwordValue });
+
                   setError('');
                   setLoading(true);
 
-                  console.log('[Login] Parent login started', { email, redirectTo });
+                  console.log('[Login] Parent login started', { email: emailValue, redirectTo });
 
                   try {
                     console.log('[Login] Calling signIn...');
-                    const { error: signInError } = await signIn(email, password);
+                    const { error: signInError } = await signIn(emailValue, passwordValue);
                     console.log('[Login] signIn completed', { error: signInError?.message });
 
                     if (signInError) {
