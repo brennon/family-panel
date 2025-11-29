@@ -11,7 +11,8 @@ This directory contains GitHub Actions workflows for the Family Panel project.
 **Jobs**:
 1. **quality-checks** - Runs ESLint and TypeScript type checking
 2. **unit-tests** - Runs Jest unit and integration tests with coverage reporting
-3. **build** - Verifies the application builds successfully
+3. **e2e-tests** - Runs Playwright E2E tests (requires GitHub secrets)
+4. **build** - Verifies the application builds successfully
 
 **Artifacts**:
 - Coverage reports (retained for 30 days)
@@ -34,11 +35,11 @@ This directory contains GitHub Actions workflows for the Family Panel project.
 
 ## E2E Tests in CI
 
-E2E tests are currently **disabled** in the test workflow because they require Supabase credentials and a test database.
+E2E tests are **enabled** in the test workflow but require GitHub secrets to be configured.
 
-### Enabling E2E Tests
+### Configuring E2E Tests
 
-To enable E2E tests in CI:
+To configure E2E tests in CI:
 
 1. **Set up a test Supabase project** (recommended: separate from production):
    - Create a new Supabase project for CI testing
@@ -51,13 +52,7 @@ To enable E2E tests in CI:
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon/public key
    - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key (keep this secret!)
 
-3. **Uncomment E2E job in test.yml**:
-   ```yaml
-   # Remove the comment markers from the e2e-tests job
-   # in .github/workflows/test.yml (lines ~78-135)
-   ```
-
-4. **Commit and push** the changes
+3. **E2E tests will run automatically** on the next PR or push to main
 
 ### E2E Test Considerations
 
