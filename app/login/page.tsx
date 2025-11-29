@@ -28,18 +28,27 @@ function LoginForm() {
     setError('');
     setLoading(true);
 
+    console.log('[Login] Parent login started', { email, redirectTo });
+
     try {
+      console.log('[Login] Calling signIn...');
       const { error } = await signIn(email, password);
+      console.log('[Login] signIn completed', { error: error?.message });
 
       if (error) {
+        console.log('[Login] Login failed:', error.message);
         setError(error.message);
       } else {
+        console.log('[Login] Login successful, navigating to:', redirectTo);
         router.push(redirectTo);
+        console.log('[Login] router.push called');
       }
     } catch (err) {
+      console.error('[Login] Unexpected error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
+      console.log('[Login] Parent login completed');
     }
   };
 

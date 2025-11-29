@@ -24,6 +24,17 @@ test.describe('Authentication', () => {
   test.beforeEach(async ({ page, context }) => {
     // Clear all cookies and storage to ensure test isolation
     await context.clearCookies();
+
+    // Capture console messages for debugging
+    page.on('console', msg => {
+      const type = msg.type();
+      const text = msg.text();
+      // Only log our diagnostic messages to reduce noise
+      if (text.includes('[Login]') || text.includes('[Auth]')) {
+        console.log(`[Browser ${type}] ${text}`);
+      }
+    });
+
     await page.goto('/login');
   });
 
