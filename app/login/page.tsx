@@ -143,15 +143,40 @@ function LoginForm() {
                 />
               </div>
               <Button
-                type="submit"
+                type="button"
                 className="w-full"
                 disabled={loading}
-                onClick={(e) => {
-                  // Webkit fallback: explicitly call handler if form submission doesn't fire
+                onClick={async (e) => {
+                  // Webkit fallback: Use button click instead of form submit
+                  e.preventDefault();
                   console.log('[Login] Button onClick triggered');
-                  if (!loading) {
-                    e.preventDefault();
-                    handleParentLogin(e as unknown as React.FormEvent);
+
+                  if (loading) return;
+
+                  setError('');
+                  setLoading(true);
+
+                  console.log('[Login] Parent login started', { email, redirectTo });
+
+                  try {
+                    console.log('[Login] Calling signIn...');
+                    const { error: signInError } = await signIn(email, password);
+                    console.log('[Login] signIn completed', { error: signInError?.message });
+
+                    if (signInError) {
+                      console.log('[Login] Login failed:', signInError.message);
+                      setError(signInError.message);
+                    } else {
+                      console.log('[Login] Login successful, navigating to:', redirectTo);
+                      router.push(redirectTo);
+                      console.log('[Login] router.push called');
+                    }
+                  } catch (err) {
+                    console.error('[Login] Unexpected error:', err);
+                    setError('An unexpected error occurred');
+                  } finally {
+                    setLoading(false);
+                    console.log('[Login] Parent login completed');
                   }
                 }}
               >
