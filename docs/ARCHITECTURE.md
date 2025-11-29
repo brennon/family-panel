@@ -1,8 +1,8 @@
 # Family Panel Architecture
 
-**Version**: 1.0
-**Last Updated**: 2025-11-27
-**Status**: Initial Design
+**Version**: 1.1
+**Last Updated**: 2025-11-29
+**Status**: Active Development - Authentication Implemented
 
 ## Table of Contents
 
@@ -165,17 +165,30 @@ Code is organized by **feature/domain**, not by technical layer.
 
 ### Testing
 
-- **Jest** - Test runner
-- **React Testing Library** - Component testing
-- **MSW** (Mock Service Worker) - API mocking for tests
+- **Jest** - Test runner for unit and integration tests
+- **React Testing Library** - Component testing with accessibility-first queries
+- **Playwright** - Cross-browser E2E testing (Chromium, Firefox, WebKit)
+- **MSW** (Mock Service Worker) - API mocking for integration tests
+- **@edge-runtime/jest-environment** - Edge Runtime environment for API route tests
+- **@testing-library/jest-dom** - Custom Jest matchers for DOM assertions
+- **@testing-library/user-event** - Realistic user interaction simulation
 
-### Deployment
+**Coverage**: 50+ E2E tests covering authentication, navigation, and core workflows
+
+### Deployment & CI/CD
 
 - **Vercel** (primary)
   - Optimized for Next.js
   - Automatic deployments from Git
   - Preview deployments for PRs
   - Edge network for global performance
+
+- **GitHub Actions** (CI/CD)
+  - Automated quality checks (lint, type-check)
+  - Unit and integration tests with coverage
+  - E2E tests with Playwright
+  - Build verification
+  - Runs on every PR and push to main
 
 - **Self-hosting option** (future)
   - Docker containers
@@ -568,23 +581,46 @@ CREATE POLICY "kids_complete_own_chores" ON chore_assignments
 
 ## Authentication & Authorization
 
+### Implementation Status
+
+**Completed** (as of v1.1):
+- Parent email/password authentication
+- Kid PIN-based authentication (4-digit)
+- Auth context provider (`lib/auth/context.tsx`)
+- Protected route middleware (`middleware.ts`)
+- Login UI with dual-mode (parent/kid)
+- Dashboard page
+- Database migrations for users, families, and permissions
+- Comprehensive test coverage (50+ E2E tests)
+
+See [docs/AUTH.md](./AUTH.md) for complete authentication documentation.
+
 ### Authentication Methods
 
 **Parents**:
-- Email + password
-- Magic link (passwordless email)
-- Future: 2FA/TOTP
+- Email + password (✅ Implemented)
+- Magic link (passwordless email) - Future
+- 2FA/TOTP - Future
 
 **Kids**:
-- Simplified PIN login (4-digit)
-- PIN stored as hash in `users.pin` field
+- Simplified PIN login (4-digit) (✅ Implemented)
+- PIN stored as bcrypt hash in `users.pin_hash` field
 - No email required
+- Uses magic link tokens internally for session creation
+
+**Implementation Details**:
+- Auth context: `lib/auth/context.tsx` - Provides `useAuth()` hook
+- Middleware: `middleware.ts` - Protects all routes except `/`, `/login`
+- Login page: `app/login/page.tsx` - Dual-mode UI
+- PIN API: `app/api/auth/pin-login/route.ts` - Server-side PIN validation
 
 ### Session Management
 
 - Supabase Auth handles session tokens (JWT)
 - Refresh tokens for long-lived sessions
 - Tokens stored in httpOnly cookies (secure)
+- Middleware automatically refreshes expired sessions
+- Redirect preservation for post-login navigation
 
 ### Authorization
 
@@ -605,9 +641,10 @@ CREATE POLICY "kids_complete_own_chores" ON chore_assignments
   - Read-only on most data
 
 **Implementation**:
-- Role stored in `users.role` column
-- Middleware checks role on every API request
-- RLS policies enforce at database level (defense in depth)
+- Role stored in `users.role` column (enforced by DB CHECK constraint)
+- Middleware checks authentication on every request
+- RLS policies enforce authorization at database level (defense in depth)
+- Database functions: `validate_kid_pin()`, `set_kid_pin()`, `get_user_family_role()`
 
 ---
 
@@ -649,6 +686,68 @@ useEffect(() => {
 - No polling required
 - Low latency (<100ms typically)
 - Scales with Supabase infrastructure
+
+---
+
+## Testing Architecture
+
+Family Panel uses a comprehensive testing strategy with three levels of testing. See [docs/TESTING.md](./TESTING.md) for complete testing documentation.
+
+### Test Levels
+
+**1. Unit Tests**
+- Test individual functions and components in isolation
+- Run with Jest + React Testing Library
+- Mock external dependencies (Supabase, Next.js router, etc.)
+- Focus on business logic and component behavior
+
+**2. Integration Tests**
+- Test API routes and service interactions
+- Use `@edge-runtime/jest-environment` for Edge Runtime compatibility
+- Mock database calls with test utilities
+- Verify request/response handling and error cases
+
+**3. End-to-End (E2E) Tests**
+- Test complete user workflows in real browsers
+- Use Playwright for cross-browser testing (Chromium, Firefox, WebKit)
+- Test against live Supabase database with seed data
+- Cover critical paths: authentication, navigation, core features
+
+**Current Coverage**: 50+ E2E tests covering authentication flows, protected routes, and session management.
+
+### Testing Tools
+
+- **Jest** - Test runner and assertion framework
+- **React Testing Library** - Component testing with accessibility-first queries
+- **Playwright** - Cross-browser E2E automation
+- **MSW** - API mocking for integration tests
+- **@testing-library/jest-dom** - Custom matchers for DOM assertions
+
+### Running Tests
+
+```bash
+# Unit and integration tests
+npm test                    # Run all tests
+npm test -- --watch         # Watch mode
+npm test -- --coverage      # With coverage report
+
+# E2E tests
+npm run test:e2e           # Headless mode
+npm run test:e2e:ui        # Interactive UI mode
+npm run test:e2e:headed    # See browser
+npm run test:e2e:debug     # Step-through debugging
+```
+
+### CI/CD Integration
+
+GitHub Actions workflow (`.github/workflows/test.yml`) runs on every PR and push to main:
+1. Type checking (`npm run type-check`)
+2. Linting (`npm run lint`)
+3. Unit/integration tests (`npm test`)
+4. E2E tests (`npm run test:e2e`)
+5. Build verification (`npm run build`)
+
+All tests must pass before merging to main.
 
 ---
 

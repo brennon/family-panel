@@ -187,13 +187,20 @@ To use a custom domain:
 - Ensure Vercel bot has access to your repository
 - Check "Git" settings in project to enable preview deployments
 
-## Running Tests Before Deploy (Future)
+## Automated Testing Before Deploy
 
-When tests are set up (fp-30, fp-tz8):
+**Status**: ✅ Implemented (see `.github/workflows/test.yml`)
 
-1. Add a `.github/workflows/test.yml` file for GitHub Actions
-2. Run tests on PR before allowing merge
-3. Vercel will wait for GitHub checks to pass before deploying previews
+GitHub Actions automatically runs tests on every PR and push to main:
+
+1. **Quality Checks**: Linting and type checking
+2. **Unit Tests**: Jest tests with coverage reporting
+3. **E2E Tests**: Playwright tests across browsers (requires Supabase secrets)
+4. **Build Verification**: Ensures application builds successfully
+
+**Branch Protection**: All tests must pass before merging to main.
+
+See [.github/workflows/README.md](../.github/workflows/README.md) for CI/CD documentation and [docs/TESTING.md](./TESTING.md) for testing guide.
 
 ## Monitoring
 

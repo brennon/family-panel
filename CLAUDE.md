@@ -65,9 +65,11 @@ See [AGENTS.md](./AGENTS.md) for complete workflow details.
 
 - **Framework**: Next.js 16 (App Router, Turbopack)
 - **Language**: TypeScript (strict mode)
+- **Database**: Supabase (PostgreSQL + Auth + Real-time)
 - **Styling**: Tailwind CSS
 - **UI Components**: shadcn/ui
 - **Date Utilities**: date-fns
+- **Testing**: Jest, React Testing Library, Playwright, MSW
 
 ## Development Commands
 
@@ -89,7 +91,16 @@ npm run type-check
 
 # Run linter
 npm run lint
+
+# Run tests
+npm test                 # Unit and integration tests
+npm test -- --watch      # Watch mode for development
+npm test -- --coverage   # With coverage report
+npm run test:e2e         # End-to-end tests with Playwright
+npm run test:e2e:ui      # E2E tests in interactive UI mode
 ```
+
+For complete testing documentation, see [docs/TESTING.md](./docs/TESTING.md).
 
 ## Visual Debugging with Playwright MCP
 
