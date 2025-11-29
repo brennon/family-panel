@@ -29,14 +29,14 @@ test.describe('Authentication', () => {
     await page.getByLabel('Email').fill('parent@example.com');
     await page.getByLabel('Password').fill('parentpassword123');
 
-    // Submit form
-    await page.getByRole('button', { name: /sign in/i }).click();
-
-    // Should redirect to dashboard (dashboard can take 10-30s to load in dev mode)
-    await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+    // Submit form and wait for navigation
+    await Promise.all([
+      page.waitForURL('/dashboard', { timeout: 30000 }),
+      page.getByRole('button', { name: /sign in/i }).click(),
+    ]);
 
     // Should show parent's name
-    await expect(page.getByText(/john parent/i).first()).toBeVisible();
+    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('kid can log in with PIN', async ({ page }) => {
@@ -64,26 +64,28 @@ test.describe('Authentication', () => {
     // Log in as parent
     await page.getByLabel('Email').fill('parent@example.com');
     await page.getByLabel('Password').fill('parentpassword123');
-    await page.getByRole('button', { name: /sign in/i }).click();
 
-    await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+    // Submit form and wait for navigation
+    await Promise.all([
+      page.waitForURL('/dashboard', { timeout: 30000 }),
+      page.getByRole('button', { name: /sign in/i }).click(),
+    ]);
+
+    // Wait for user data to load
     await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
 
     // Refresh page
     await page.reload();
 
-    // Wait for either the user name to appear OR to be redirected to login (if session didn't persist)
-    // We use Promise.race to handle both success and failure cases gracefully
-    await Promise.race([
-      page.getByText(/john parent/i).first().waitFor({ state: 'visible', timeout: 15000 }),
-      page.waitForURL('/login', { timeout: 15000 }).then(() => {
-        throw new Error('Session did not persist - redirected to login page');
-      })
-    ]);
+    // The key test: after refresh, we should NOT be redirected to login
+    // If middleware redirects us, the session didn't persist
+    await page.waitForLoadState('networkidle', { timeout: 10000 });
 
-    // Should still be on dashboard with user data visible
+    // Check we're still on dashboard (session persisted)
     await expect(page).toHaveURL('/dashboard');
-    await expect(page.getByText(/john parent/i).first()).toBeVisible();
+
+    // User name should eventually appear (may take a moment for profile to load)
+    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test('invalid PIN shows error', async ({ page }) => {

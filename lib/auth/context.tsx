@@ -32,34 +32,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   // Fetch user profile data including role
-  const fetchUserProfile = useCallback(async (authUser: User): Promise<AuthUser> => {
+  const fetchUserProfile = useCallback(async (authUser: User, retries = 2): Promise<AuthUser> => {
     type ProfileData = {
       role: UserRole;
       name: string;
     };
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('role, name')
-      .eq('id', authUser.id)
-      .single();
+    try {
+      // Set a timeout for the query
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+      });
 
-    if (error || !data) {
-      console.error('Error fetching user profile:', error);
+      const queryPromise = supabase
+        .from('users')
+        .select('role, name')
+        .eq('id', authUser.id)
+        .single();
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as Awaited<typeof queryPromise>;
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('No profile data returned');
+      }
+
+      const profile = data as ProfileData;
+
+      return {
+        ...authUser,
+        role: profile.role,
+        name: profile.name,
+      };
+    } catch (error) {
+      console.error(`Error fetching user profile (${retries} retries left):`, error);
+
+      // Retry if we have retries left
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+        return fetchUserProfile(authUser, retries - 1);
+      }
+
+      // Final fallback: return user without profile data
+      console.warn('Failed to fetch user profile after retries, using auth user data only');
       return {
         ...authUser,
         role: undefined,
-        name: undefined,
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
       };
     }
-
-    const profile = data as ProfileData;
-
-    return {
-      ...authUser,
-      role: profile.role,
-      name: profile.name,
-    };
   }, [supabase]);
 
   // Initialize auth state
@@ -71,15 +95,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           const userWithProfile = await fetchUserProfile(session.user);
           setUser(userWithProfile);
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    initAuth();
+    // Set a timeout to prevent infinite loading state
+    const timeout = setTimeout(() => {
+      console.warn('Auth initialization timed out after 10s');
+      setLoading(false);
+    }, 10000);
+
+    initAuth().finally(() => clearTimeout(timeout));
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
