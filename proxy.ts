@@ -2,11 +2,11 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Middleware for protected routes
+ * Proxy for protected routes
  * Checks authentication and redirects unauthenticated users to login
  */
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Skip auth checks during build time (when env vars aren't available)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.next();
