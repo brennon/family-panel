@@ -39,9 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      // Set a timeout for the query
+      console.log('[Auth] Fetching profile for user:', authUser.id);
+      const startTime = Date.now();
+
+      // Increase timeout to 10 seconds for production environments
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+        setTimeout(() => reject(new Error('Profile fetch timeout after 10s')), 10000);
       });
 
       const queryPromise = supabase
@@ -52,7 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as Awaited<typeof queryPromise>;
 
+      const elapsed = Date.now() - startTime;
+      console.log(`[Auth] Profile fetch completed in ${elapsed}ms`);
+
       if (error) {
+        console.error('[Auth] Supabase error:', error);
         throw error;
       }
 
@@ -61,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const profile = data as ProfileData;
+      console.log('[Auth] Profile loaded:', { role: profile.role, name: profile.name });
 
       return {
         ...authUser,
@@ -68,20 +76,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: profile.name,
       };
     } catch (error) {
-      console.error(`Error fetching user profile (${retries} retries left):`, error);
+      console.error(`[Auth] Error fetching user profile (${retries} retries left):`, error);
 
       // Retry if we have retries left
       if (retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+        console.log(`[Auth] Retrying profile fetch in 500ms...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
         return fetchUserProfile(authUser, retries - 1);
       }
 
       // Final fallback: return user without profile data
-      console.warn('Failed to fetch user profile after retries, using auth user data only');
+      console.warn('[Auth] Failed to fetch user profile after retries, using fallback');
       return {
         ...authUser,
         role: undefined,
-        name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
       };
     }
   }, [supabase]);
