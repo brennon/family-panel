@@ -7,6 +7,23 @@ import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from './types';
 
 export function createClient() {
+  // Skip client creation during build time when env vars aren't available
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // Return a dummy client that won't be used during build
+    // This is safe because the AuthProvider is a client component that only runs in the browser
+    return createBrowserClient<Database>(
+      'https://placeholder.supabase.co',
+      'placeholder-anon-key',
+      {
+        cookies: {
+          get() { return undefined; },
+          set() { },
+          remove() { },
+        },
+      }
+    );
+  }
+
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
