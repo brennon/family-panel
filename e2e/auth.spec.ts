@@ -29,10 +29,13 @@ test.describe('Authentication', () => {
     page.on('console', msg => {
       const type = msg.type();
       const text = msg.text();
-      // Only log our diagnostic messages to reduce noise
-      if (text.includes('[Login]') || text.includes('[Auth]')) {
-        console.log(`[Browser ${type}] ${text}`);
-      }
+      // Log all console messages to diagnose webkit issue
+      console.log(`[Browser ${type}] ${text}`);
+    });
+
+    // Capture page errors
+    page.on('pageerror', error => {
+      console.error(`[Browser pageerror] ${error.message}\n${error.stack}`);
     });
 
     await page.goto('/login');
@@ -55,19 +58,27 @@ test.describe('Authentication', () => {
   test('parent can log in with email and password', async ({ page, browserName }) => {
     const users = getTestUsers(browserName);
 
+    console.log(`[Test] Starting parent login for ${browserName}, user: ${users.parent.email}`);
+
     // Fill in parent login form
+    console.log('[Test] Filling email field');
     await page.getByLabel('Email').fill(users.parent.email);
+    console.log('[Test] Filling password field');
     await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
     // WebKit needs both URL change and load state wait
+    console.log('[Test] Clicking sign in button');
     await page.getByRole('button', { name: /sign in/i }).click();
+    console.log('[Test] Button clicked, waiting for navigation');
     await page.waitForURL('/dashboard', { timeout: 30000 });
+    console.log('[Test] Navigation complete');
     await page.waitForLoadState('networkidle');
 
     // Should show parent's name
     const nameRegex = new RegExp(users.parent.name, 'i');
     await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
+    console.log('[Test] Parent login test complete');
   });
 
   test('kid can log in with PIN', async ({ page, browserName }) => {
