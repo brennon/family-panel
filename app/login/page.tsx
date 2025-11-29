@@ -142,7 +142,19 @@ function LoginForm() {
                   autoComplete="current-password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+                onClick={(e) => {
+                  // Webkit fallback: explicitly call handler if form submission doesn't fire
+                  console.log('[Login] Button onClick triggered');
+                  if (!loading) {
+                    e.preventDefault();
+                    handleParentLogin(e as unknown as React.FormEvent);
+                  }
+                }}
+              >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
