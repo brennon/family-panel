@@ -77,9 +77,8 @@ test.describe('Authentication', () => {
     // Refresh page
     await page.reload();
 
-    // The key test: after refresh, we should NOT be redirected to login
-    // If middleware redirects us, the session didn't persist
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Wait for page to finish loading (don't use networkidle - Supabase keeps connections open)
+    await page.waitForLoadState('domcontentloaded');
 
     // Check we're still on dashboard (session persisted)
     await expect(page).toHaveURL('/dashboard');
