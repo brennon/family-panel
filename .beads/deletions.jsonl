@@ -18,3 +18,6 @@
 {"id":"fp-1it","ts":"2025-11-29T04:56:30.111122Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
 {"id":"fp-uvu","ts":"2025-11-29T04:56:30.116005Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
 {"id":"fp-xlg","ts":"2025-11-29T04:56:30.120974Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
+{"id":"fp-b40","ts":"2025-11-29T15:37:36.735252Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
+{"id":"fp-ig4","ts":"2025-11-29T15:37:36.74196Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
+{"id":"fp-601","ts":"2025-11-29T15:43:34.846995Z","by":"bortzb","reason":"manual delete"}
