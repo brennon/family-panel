@@ -39,9 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
-      console.log('[Auth] Fetching profile for user:', authUser.id);
-      const startTime = Date.now();
-
       // 5 second timeout for profile fetch
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Profile fetch timeout after 5s')), 5000);
@@ -55,9 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as Awaited<typeof queryPromise>;
 
-      const elapsed = Date.now() - startTime;
-      console.log(`[Auth] Profile fetch completed in ${elapsed}ms`);
-
       if (error) {
         console.error('[Auth] Supabase error:', error);
         throw error;
@@ -68,7 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const profile = data as ProfileData;
-      console.log('[Auth] Profile loaded:', { role: profile.role, name: profile.name });
 
       return {
         ...authUser,
@@ -80,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Retry if we have retries left
       if (retries > 0) {
-        console.log(`[Auth] Retrying profile fetch in 200ms...`);
         await new Promise(resolve => setTimeout(resolve, 200));
         return fetchUserProfile(authUser, retries - 1);
       }
@@ -111,13 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes - this is the primary way to get session after refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Auth] State change:', event);
         if (!mounted) return;
 
         // Only handle INITIAL_SESSION for the first load, ignore early SIGNED_IN
         if (!isInitialized) {
           if (event !== 'INITIAL_SESSION') {
-            console.log('[Auth] Ignoring', event, 'during initialization');
             return;
           }
           isInitialized = true;
