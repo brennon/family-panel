@@ -42,7 +42,7 @@
 
 ## 🚨 REMAINING WORK - CRITICAL
 
-### Issue fp-b40: Restore Removed RLS Policies
+### Issue fp-zcv: Restore Removed RLS Policies
 
 **The Problem:**
 
@@ -92,7 +92,7 @@ All RLS policies using `get_user_role()` and `is_parent()` helper functions were
    - Explain why they're being restored (they weren't the issue)
    - Reference commit `0921f85` which fixed the real issue (event timing)
 
-**Beads Issue:** `fp-b40` - "Restore RLS policies removed during test debugging"
+**Beads Issue:** `fp-zcv` - "Restore RLS policies removed during test debugging"
 - Status: Open
 - Priority: P1 (Critical)
 - Blocks: fp-7 completion
