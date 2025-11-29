@@ -28,8 +28,9 @@ export default defineConfig({
 
   // Shared settings for all the projects below
   use: {
-    // Base URL for navigation (agent-1 uses port 3001)
-    baseURL: 'http://localhost:3001',
+    // Base URL for navigation
+    // Use port 3000 in CI, port 3001 for local parallel agents (agent-1)
+    baseURL: process.env.CI ? 'http://localhost:3000' : 'http://localhost:3001',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -72,7 +73,8 @@ export default defineConfig({
   // Run your local dev server before starting the tests
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3001',
+    // Use port 3000 in CI, port 3001 for local parallel agents
+    url: process.env.CI ? 'http://localhost:3000' : 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
