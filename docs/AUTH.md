@@ -28,23 +28,62 @@ The authentication system uses Supabase Auth with custom role-based access contr
    - Kid: user ID + 4-digit PIN
    - Handles redirects after successful login
 
-4. **Dashboard** (`app/dashboard/page.tsx`)
+4. **PIN Login API** (`app/api/auth/pin-login/route.ts`)
+   - Validates kid's PIN using database function
+   - Uses admin client to bypass RLS for authentication
+   - Generates magic link token via `auth.admin.generateLink()`
+   - Returns token hash for client-side session creation
+   - Security: Verifies role is 'kid', validates PIN format (4 digits)
+
+5. **Dashboard** (`app/dashboard/page.tsx`)
    - Protected route requiring authentication
    - Shows user information and role-specific actions
    - Sign out functionality
 
 ### Database Schema
 
-The authentication system extends the `users` table with:
+The authentication system includes several schema additions:
 
+**User Roles** (migration 002):
 ```sql
--- Added in migration 003_add_kid_pin.sql
+ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'kid';
+CREATE INDEX idx_users_role ON users(role);
+```
+
+**PIN Authentication** (migration 003):
+```sql
 ALTER TABLE users ADD COLUMN pin_hash TEXT;
 ```
 
+**Family Relationships** (migration 004):
+```sql
+-- Families table
+CREATE TABLE families (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Family members junction table
+CREATE TABLE family_members (
+  family_id UUID REFERENCES families(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('parent', 'kid')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (family_id, user_id)
+);
+```
+
 **Functions:**
-- `validate_kid_pin(user_id, pin)` - Validates a kid's PIN
+- `validate_kid_pin(user_id, pin)` - Validates a kid's PIN (uses bcrypt comparison)
 - `set_kid_pin(user_id, pin)` - Sets/updates a kid's PIN (must be 4 digits)
+- `get_user_family_role(user_id, family_id)` - Gets user's role within a family
+
+**Permissions** (migration 006):
+- Service role: Full access to all tables, sequences, and functions
+- Anon/Authenticated roles: SELECT on users, families, family_members
+- Authenticated users can update their own profiles and manage family data
 
 ## Authentication Flows
 
@@ -56,15 +95,30 @@ ALTER TABLE users ADD COLUMN pin_hash TEXT;
 4. System validates credentials via Supabase Auth
 5. On success, redirects to `/dashboard`
 
-### Kid Authentication
+### Kid Authentication (Magic Link Approach)
 
 1. Kid navigates to `/login`
 2. Selects "Kid Login" mode
 3. Enters their user ID (provided by parent)
 4. Enters 4-digit PIN
-5. System validates via `/api/auth/pin-login` endpoint
-6. API route calls `validate_kid_pin()` database function
-7. On success, creates session and redirects to `/dashboard`
+5. Client sends request to `/api/auth/pin-login` endpoint
+6. **Server-side validation and token generation**:
+   - API route validates PIN using `validate_kid_pin()` database function
+   - Uses admin client (service role) to bypass RLS
+   - Verifies user has `role = 'kid'`
+   - Generates magic link token via `auth.admin.generateLink()`
+   - Extracts `hashed_token` from response
+   - Returns token hash to client
+7. **Client-side session creation**:
+   - Client receives token hash
+   - Calls `supabase.auth.verifyOtp()` with token hash
+   - Supabase creates authenticated session
+8. On success, redirects to `/dashboard`
+
+**Why Magic Links?**: This approach uses Supabase's built-in magic link mechanism to create proper authenticated sessions. The PIN is validated server-side, and if valid, a magic link token is generated and immediately verified to create the session. This ensures:
+- Proper session management (refresh tokens, expiry, etc.)
+- Compliance with Supabase auth patterns
+- Security through server-side validation with admin privileges
 
 ## Protected Routes
 
@@ -123,18 +177,55 @@ In the future, this will be exposed through a parent-only UI.
 
 ## Migration Instructions
 
-To apply the authentication schema:
+To apply the complete authentication schema from scratch:
 
-1. Ensure migrations 001 and 002 (from fp-6) are applied
-2. Apply migration 003:
+### Fresh Database Setup
+
+1. **Wipe database** (development/test only):
+   - In Supabase dashboard, go to Database → Schema
+   - Drop all tables in public schema
+   - Truncate `auth.users` and `auth.identities` tables
+
+2. **Apply migrations in order**:
    ```bash
-   # In Supabase SQL Editor
-   # Run supabase/migrations/003_add_kid_pin.sql
+   # In Supabase SQL Editor, run each migration file:
+
+   # 001_initial_schema.sql - Base users table
+   # 002_add_role_to_users.sql - Add role column
+   # 003_add_kid_pin.sql - Add PIN authentication
+   # 004_add_family_relationships.sql - Add families and family_members tables
+   # 005_seed_test_data.sql - Create test users (dev/test environments only)
+   # 006_grant_permissions.sql - Grant necessary permissions to roles
    ```
 
-3. Set up parent accounts via Supabase Auth UI or API
-4. Create user records in the `users` table with `role = 'parent'` or `role = 'kid'`
-5. For kids, set their PINs using `set_kid_pin()`
+3. **For production environments**:
+   - Skip migration 005 (seed data)
+   - Set up parent accounts via Supabase Auth UI or API
+   - Create user records in the `users` table with corresponding UUIDs
+   - For kids, set their PINs using `set_kid_pin()`
+
+### Verifying Setup
+
+After applying migrations, verify:
+
+```sql
+-- Check users exist
+SELECT id, email, name, role FROM users;
+
+-- Check families exist
+SELECT * FROM families;
+
+-- Check family relationships
+SELECT fm.family_id, fm.user_id, fm.role, u.name, f.name as family_name
+FROM family_members fm
+JOIN users u ON fm.user_id = u.id
+JOIN families f ON fm.family_id = f.id;
+
+-- Verify kids have PINs set
+SELECT id, name, role, (pin_hash IS NOT NULL) as has_pin
+FROM users
+WHERE role = 'kid';
+```
 
 ## Future Enhancements
 
