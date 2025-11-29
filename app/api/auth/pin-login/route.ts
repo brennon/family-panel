@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 
 /**
  * API Route: PIN Login for Kids
- * Validates kid's PIN and creates an authenticated session
+ * Validates kid's PIN and creates an authenticated session via magic link token
  */
 
 export async function POST(request: NextRequest) {
@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    // Use admin client to bypass RLS for authentication
+    const adminClient = createAdminClient();
 
     // Validate PIN using database function
-    const { data: isValid, error } = await supabase.rpc('validate_kid_pin', {
+    const { data: isValid, error } = await adminClient.rpc('validate_kid_pin', {
       p_user_id: userId,
       p_pin: pin,
     } as any); // Type assertion needed due to RPC type limitations
@@ -56,13 +57,14 @@ export async function POST(request: NextRequest) {
       role: string;
     };
 
-    const { data, error: userError } = await supabase
+    const { data, error: userError} = await adminClient
       .from('users')
       .select('id, email, name, role')
       .eq('id', userId)
       .single();
 
     if (userError || !data) {
+      console.error('User lookup error:', userError);
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -71,16 +73,43 @@ export async function POST(request: NextRequest) {
 
     const user = data as UserProfile;
 
-    // For now, we validate the PIN but don't create a full Supabase Auth session
-    // In production, you would:
-    // 1. Use Supabase custom tokens, OR
-    // 2. Set up kids with magic link auth, OR
-    // 3. Use a session cookie with JWT
+    // Verify user is a kid
+    if (user.role !== 'kid') {
+      return NextResponse.json(
+        { error: 'PIN login is only for kids' },
+        { status: 403 }
+      );
+    }
 
-    // Return success with user info
-    // The client-side will need to handle the session state
+    // Generate a magic link token for the user
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email,
+    });
+
+    if (linkError || !linkData) {
+      console.error('Magic link generation error:', linkError);
+      return NextResponse.json(
+        { error: 'Failed to generate authentication token' },
+        { status: 500 }
+      );
+    }
+
+    // Extract the hashed token from the response
+    const tokenHash = linkData.properties.hashed_token;
+
+    if (!tokenHash) {
+      console.error('No hashed token in magic link response');
+      return NextResponse.json(
+        { error: 'Failed to generate authentication token' },
+        { status: 500 }
+      );
+    }
+
+    // Return the token hash to the client
     return NextResponse.json({
       success: true,
+      token: tokenHash,
       user: {
         id: user.id,
         email: user.email,

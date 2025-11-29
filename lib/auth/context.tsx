@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with PIN (for kids)
   const signInWithPin = async (userId: string, pin: string) => {
     try {
-      // Call API route to validate PIN and create session
+      // Call API route to validate PIN and get session tokens
       const response = await fetch('/api/auth/pin-login', {
         method: 'POST',
         headers: {
@@ -140,9 +140,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error(data.error || 'PIN login failed') };
       }
 
-      // Refresh the session
-      await refreshUser();
+      // Verify the magic link token to create a session
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.token,
+        type: 'magiclink',
+      });
 
+      if (verifyError) {
+        console.error('Token verification error:', verifyError);
+        return { error: verifyError };
+      }
+
+      // Session will be automatically picked up by onAuthStateChange listener
       return { error: null };
     } catch (error) {
       return { error: error as Error };

@@ -40,7 +40,8 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession();
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login');
-  const isPublicPage = request.nextUrl.pathname === '/' || isAuthPage;
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+  const isPublicPage = request.nextUrl.pathname === '/' || isAuthPage || isApiRoute;
 
   // Redirect to login if not authenticated and trying to access protected route
   if (!session && !isPublicPage) {
