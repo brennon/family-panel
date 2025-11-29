@@ -157,10 +157,13 @@ test.describe('Authentication', () => {
       page.getByRole('button', { name: /sign in/i }).click(),
     ]);
 
-    // Sign out
-    await page.getByRole('button', { name: /sign out/i }).click();
+    // Sign out and wait for navigation
+    await Promise.all([
+      page.waitForURL('/login', { timeout: 10000 }),
+      page.getByRole('button', { name: /sign out/i }).click(),
+    ]);
 
-    // Should redirect to login
+    // Should be on login page
     await expect(page).toHaveURL('/login');
 
     // Try to access dashboard
