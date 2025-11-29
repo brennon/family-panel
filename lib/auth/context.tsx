@@ -42,10 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[Auth] Fetching profile for user:', authUser.id);
       const startTime = Date.now();
 
-      // Increase timeout to 30 seconds for E2E test environments
-      // Some browsers in Playwright are slower to establish Supabase connections
+      // 5 second timeout for profile fetch
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Profile fetch timeout after 30s')), 30000);
+        setTimeout(() => reject(new Error('Profile fetch timeout after 5s')), 5000);
       });
 
       const queryPromise = supabase
@@ -81,8 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Retry if we have retries left
       if (retries > 0) {
-        console.log(`[Auth] Retrying profile fetch in 500ms...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log(`[Auth] Retrying profile fetch in 200ms...`);
+        await new Promise(resolve => setTimeout(resolve, 200));
         return fetchUserProfile(authUser, retries - 1);
       }
 
@@ -98,46 +97,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          const userWithProfile = await fetchUserProfile(session.user);
-          setUser(userWithProfile);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    let mounted = true;
 
     // Set a timeout to prevent infinite loading state
     const timeout = setTimeout(() => {
-      console.warn('Auth initialization timed out after 30s');
-      setLoading(false);
-    }, 30000);
+      if (mounted) {
+        console.warn('Auth initialization timed out after 10s');
+        setLoading(false);
+      }
+    }, 10000);
 
-    initAuth().finally(() => clearTimeout(timeout));
-
-    // Listen for auth changes
+    // Listen for auth changes - this is the primary way to get session after refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[Auth] State change:', event);
+        if (!mounted) return;
+
         if (session?.user) {
           const userWithProfile = await fetchUserProfile(session.user);
-          setUser(userWithProfile);
+          if (mounted) {
+            setUser(userWithProfile);
+            setLoading(false);
+          }
         } else {
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
         }
-        setLoading(false);
       }
     );
 
+    // Also check current session (for initial page load)
+    // This runs after onAuthStateChange is set up
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+
+      if (session?.user) {
+        fetchUserProfile(session.user).then(userWithProfile => {
+          if (mounted) {
+            setUser(userWithProfile);
+            setLoading(false);
+          }
+        }).catch(error => {
+          console.error('[Auth] Error in getSession profile fetch:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+        });
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
     return () => {
+      mounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [fetchUserProfile, supabase.auth]);

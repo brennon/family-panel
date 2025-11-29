@@ -84,8 +84,7 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL('/dashboard');
 
     // User name should eventually appear (may take a moment for profile to load)
-    // Note: Some browsers in Playwright are slower to establish Supabase connections
-    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('invalid PIN shows error', async ({ page }) => {
