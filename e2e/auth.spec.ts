@@ -20,8 +20,24 @@ import { test, expect } from '@playwright/test';
  * - kid2@example.com (Bob Kid, PIN: 5678, ID: 00000000-0000-0000-0000-000000000003)
  */
 test.describe('Authentication', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, context }) => {
+    // Clear all cookies and storage to ensure test isolation
+    await context.clearCookies();
     await page.goto('/login');
+  });
+
+  test.afterEach(async ({ page, context }) => {
+    // Clean up: clear all auth state
+    try {
+      // Clear all cookies and storage
+      await context.clearCookies();
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+    } catch {
+      // Ignore errors if page is closed or navigation failed
+    }
   });
 
   test('parent can log in with email and password', async ({ page }) => {
@@ -120,9 +136,12 @@ test.describe('Authentication', () => {
     // Log in
     await page.getByLabel('Email').fill('parent@example.com');
     await page.getByLabel('Password').fill('parentpassword123');
-    await page.getByRole('button', { name: /sign in/i }).click();
 
-    await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+    // Submit form and wait for navigation
+    await Promise.all([
+      page.waitForURL('/dashboard', { timeout: 30000 }),
+      page.getByRole('button', { name: /sign in/i }).click(),
+    ]);
 
     // Sign out
     await page.getByRole('button', { name: /sign out/i }).click();

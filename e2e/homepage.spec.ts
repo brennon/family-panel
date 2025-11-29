@@ -1,6 +1,22 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Homepage', () => {
+  test.beforeEach(async ({ context }) => {
+    // Clear all cookies and storage to ensure test isolation
+    await context.clearCookies();
+  });
+
+  test.afterEach(async ({ page, context }) => {
+    // Clear all cookies and storage
+    await context.clearCookies();
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    }).catch(() => {
+      // Ignore errors if page is closed
+    });
+  });
+
   test('should load and display welcome message', async ({ page }) => {
     // Navigate to the homepage
     await page.goto('/');
