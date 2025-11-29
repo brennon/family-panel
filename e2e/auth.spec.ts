@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { getTestUsers } from './fixtures/test-users';
 
 /**
  * Authentication E2E tests
@@ -8,16 +9,16 @@ import { test, expect } from '@playwright/test';
  * 1. Wipe database completely
  * 2. Run all migrations in order:
  *    - 001_initial_schema.sql
- *    - 002_add_role_to_users.sql
+ *    - 002_row_level_security.sql
  *    - 003_add_kid_pin.sql
  *    - 004_add_family_relationships.sql
- *    - 005_seed_test_data.sql (creates test users with deterministic UUIDs)
+ *    - 005_seed_test_data.sql
+ *    - 006_grant_permissions.sql
+ *    - 007_add_browser_specific_test_users.sql
  * 3. Ensure .env.local has SUPABASE_SERVICE_ROLE_KEY set
  *
- * Test users created by seed data:
- * - parent@example.com (password: parentpassword123, ID: 00000000-0000-0000-0000-000000000001)
- * - kid1@example.com (Alice Kid, PIN: 1234, ID: 00000000-0000-0000-0000-000000000002)
- * - kid2@example.com (Bob Kid, PIN: 5678, ID: 00000000-0000-0000-0000-000000000003)
+ * Test users: Each browser gets unique users to prevent cross-browser interference
+ * Created by migrations 005 (shared) and 007 (browser-specific)
  */
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page, context }) => {
@@ -40,10 +41,12 @@ test.describe('Authentication', () => {
     }
   });
 
-  test('parent can log in with email and password', async ({ page }) => {
+  test('parent can log in with email and password', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
     // Fill in parent login form
-    await page.getByLabel('Email').fill('parent@example.com');
-    await page.getByLabel('Password').fill('parentpassword123');
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
     await Promise.all([
@@ -52,10 +55,13 @@ test.describe('Authentication', () => {
     ]);
 
     // Should show parent's name
-    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
+    const nameRegex = new RegExp(users.parent.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('kid can log in with PIN', async ({ page }) => {
+  test('kid can log in with PIN', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
     // Switch to kid login
     await page.getByRole('button', { name: /kid login/i }).click();
 
@@ -63,8 +69,8 @@ test.describe('Authentication', () => {
     await expect(page.getByLabel(/your name/i)).toBeVisible();
 
     // Fill in kid login form
-    await page.getByLabel(/your name/i).fill('00000000-0000-0000-0000-000000000002');
-    await page.getByLabel(/pin code/i).fill('1234');
+    await page.getByLabel(/your name/i).fill(users.kid1.id);
+    await page.getByLabel(/pin code/i).fill(users.kid1.pin);
 
     // Submit form
     await page.getByRole('button', { name: /sign in/i }).click();
@@ -73,13 +79,16 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
 
     // Should show kid's name (use first() to handle multiple matches)
-    await expect(page.getByText(/alice kid/i).first()).toBeVisible();
+    const nameRegex = new RegExp(users.kid1.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible();
   });
 
-  test('session persists after page refresh', async ({ page }) => {
+  test('session persists after page refresh', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
     // Log in as parent
-    await page.getByLabel('Email').fill('parent@example.com');
-    await page.getByLabel('Password').fill('parentpassword123');
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
     await Promise.all([
@@ -88,7 +97,8 @@ test.describe('Authentication', () => {
     ]);
 
     // Wait for user data to load
-    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
+    const nameRegex = new RegExp(users.parent.name, 'i');
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
 
     // Refresh page
     await page.reload();
@@ -100,10 +110,12 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL('/dashboard');
 
     // User name should eventually appear (may take a moment for profile to load)
-    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(nameRegex).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('invalid PIN shows error', async ({ page }) => {
+  test('invalid PIN shows error', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
     // Switch to kid login
     await page.getByRole('button', { name: /kid login/i }).click();
 
@@ -111,7 +123,7 @@ test.describe('Authentication', () => {
     await expect(page.getByLabel(/your name/i)).toBeVisible();
 
     // Fill in with wrong PIN
-    await page.getByLabel(/your name/i).fill('00000000-0000-0000-0000-000000000002');
+    await page.getByLabel(/your name/i).fill(users.kid1.id);
     await page.getByLabel(/pin code/i).fill('9999');
 
     // Submit form
@@ -132,10 +144,12 @@ test.describe('Authentication', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('sign out works correctly', async ({ page }) => {
+  test('sign out works correctly', async ({ page, browserName }) => {
+    const users = getTestUsers(browserName);
+
     // Log in
-    await page.getByLabel('Email').fill('parent@example.com');
-    await page.getByLabel('Password').fill('parentpassword123');
+    await page.getByLabel('Email').fill(users.parent.email);
+    await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
     await Promise.all([
