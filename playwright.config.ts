@@ -54,13 +54,10 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    // WebKit has issues with Supabase signInWithPassword in headless CI
-    // See issue fp-8j9 for details
-    // Works locally and kid PIN login works in CI, but parent email/password times out
-    ...(!process.env.CI ? [{
+    {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-    }] : []),
+    },
 
     // Mobile viewports
     {
@@ -68,11 +65,10 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
 
-    // Mobile Safari uses WebKit engine - same issue as desktop webkit in CI
-    ...(!process.env.CI ? [{
+    {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-    }] : []),
+    },
   ],
 
   // Run your local dev server before starting the tests
