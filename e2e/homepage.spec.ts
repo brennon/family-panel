@@ -17,11 +17,11 @@ test.describe('Homepage', () => {
     await page.goto('/');
 
     // Check that both buttons are visible and enabled
-    const getStartedButton = page.getByRole('button', { name: 'Get Started' });
+    const signInButton = page.getByRole('button', { name: 'Sign In' });
     const learnMoreButton = page.getByRole('button', { name: 'Learn More' });
 
-    await expect(getStartedButton).toBeVisible();
-    await expect(getStartedButton).toBeEnabled();
+    await expect(signInButton).toBeVisible();
+    await expect(signInButton).toBeEnabled();
 
     await expect(learnMoreButton).toBeVisible();
     await expect(learnMoreButton).toBeEnabled();

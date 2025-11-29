@@ -67,12 +67,22 @@ test.describe('Authentication', () => {
     await page.getByRole('button', { name: /sign in/i }).click();
 
     await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+    await expect(page.getByText(/john parent/i).first()).toBeVisible({ timeout: 10000 });
 
     // Refresh page
     await page.reload();
 
-    // Should still be on dashboard
-    await expect(page).toHaveURL('/dashboard', { timeout: 30000 });
+    // Wait for either the user name to appear OR to be redirected to login (if session didn't persist)
+    // We use Promise.race to handle both success and failure cases gracefully
+    await Promise.race([
+      page.getByText(/john parent/i).first().waitFor({ state: 'visible', timeout: 15000 }),
+      page.waitForURL('/login', { timeout: 15000 }).then(() => {
+        throw new Error('Session did not persist - redirected to login page');
+      })
+    ]);
+
+    // Should still be on dashboard with user data visible
+    await expect(page).toHaveURL('/dashboard');
     await expect(page.getByText(/john parent/i).first()).toBeVisible();
   });
 
