@@ -73,7 +73,7 @@ jobs:
 
     # Ubuntu 24.04 (what ubuntu-latest pointed to at the time of this change) causes issues
     # when running tests using WebKit. https://github.com/microsoft/playwright/issues/33057
-    runs-on: ubuntu--22.04
+    runs-on: ubuntu-22.04
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
