@@ -68,6 +68,10 @@ DROP FUNCTION IF EXISTS is_parent(UUID);
 -- 3. Recreate USERS table policies without circular dependencies
 -- ============================================================================
 
+-- Drop existing simple policies first (from migration 007/010)
+DROP POLICY IF EXISTS "Users can read own profile" ON users;
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
+
 -- Users can read their own profile (no role check, no subqueries)
 CREATE POLICY "Users can read own profile"
     ON users FOR SELECT
