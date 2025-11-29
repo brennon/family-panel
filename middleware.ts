@@ -7,6 +7,11 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 
 export async function middleware(request: NextRequest) {
+  // Skip auth checks during build time (when env vars aren't available)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
