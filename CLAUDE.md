@@ -19,43 +19,54 @@ Family Panel is a new project currently in the early setup phase. The codebase u
    git checkout -b feature/fp-<issue-id>-<short-description>
    ```
 
-2. **Do your work** on the feature branch
+2. **Write tests FIRST** (Test-Driven Development):
+   - Write failing tests for new functionality/bug fixes
+   - Tests must be real and meaningful (no hardcoded values)
+   - Never skip tests to pretend code works
 
-3. **Run quality checks** (REQUIRED before committing):
+3. **Implement to make tests pass**:
+   - Write code to satisfy the tests
+   - No cheating (hardcoded test values, skipping tests)
+   - Iterate until all tests pass
+
+4. **Run quality checks** (REQUIRED before committing):
    ```bash
    npm run lint        # Must pass
    npm run type-check  # Must pass
-   npm run test        # Must pass
-   npm run test:e2e    # Must pass
+   npm run test        # Must pass (ALL tests passing)
+   npm run test:e2e    # Must pass (ALL tests passing)
    ```
 
-4. **Mark issue as blocked** pending review:
+5. **Mark issue as blocked** pending review:
    ```bash
    bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."
    ```
 
-5. **Commit your changes** (includes .beads/issues.jsonl with blocked status):
+6. **Commit your changes** (includes .beads/issues.jsonl with blocked status):
    ```bash
    git add .
    git commit -m "feat(scope): description [fp-<id>]"
    ```
 
-6. **Push your branch**:
+7. **Push your branch**:
    ```bash
    git push -u origin feature/fp-<id>-description
    ```
 
-7. **Create a PR** for human review:
+8. **Create a PR** for human review:
    ```bash
    gh pr create --title "feat: description [fp-<id>]" --body "description"
    ```
 
-8. **Never merge to main yourself** - wait for human approval
+9. **Never merge to main yourself** - wait for human approval
 
 ❌ **DO NOT**:
 - Commit directly to main
 - Push to main
 - Skip lint/type-check
+- Skip writing tests
+- Hardcode test values or skip tests to fake passing
+- Push with failing tests
 - Merge PRs yourself
 - Close issues before PR is merged
 

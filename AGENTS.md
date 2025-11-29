@@ -6,14 +6,17 @@
 
 Before starting ANY work:
 1. ✅ Create branch: `git checkout -b feature/fp-<id>-description`
-2. ✅ Do your work
-3. ✅ Run `npm run lint` and `npm run type-check` - both MUST pass
-4. ✅ Run `npm run test` and `npm run test:e2e` - both MUST pass
-5. ✅ Mark issue as blocked: `bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."`
-6. ✅ Commit to feature branch (includes .beads/issues.jsonl)
-7. ✅ Push branch: `git push -u origin feature/fp-<id>-description`
-8. ✅ Create PR for human review
-9. ❌ NEVER merge to main yourself
+2. ✅ Write tests FIRST (Test-Driven Development)
+   - Write failing tests for new functionality/bug fixes
+   - Tests must be real and meaningful (no hardcoded values, no skipping)
+3. ✅ Implement code to make tests pass (no cheating)
+4. ✅ Run `npm run lint` and `npm run type-check` - both MUST pass
+5. ✅ Run `npm run test` and `npm run test:e2e` - ALL tests MUST pass
+6. ✅ Mark issue as blocked: `bd update fp-<id> --status blocked --notes "Work complete. Awaiting PR review."`
+7. ✅ Commit to feature branch (includes .beads/issues.jsonl)
+8. ✅ Push branch: `git push -u origin feature/fp-<id>-description`
+9. ✅ Create PR for human review
+10. ❌ NEVER merge to main yourself
 
 **If you find yourself on main branch, STOP and create a feature branch first.**
 
@@ -80,7 +83,11 @@ bd close bd-42 --reason "Completed" --json
    - Format: `<type>/<issue-id>-<short-description>`
    - Examples: `feature/family-panel-5-chore-service`, `fix/family-panel-12-timer-bug`
    - Use git: `git checkout -b feature/family-panel-5-chore-service`
-4. **Work on it**: Implement, test, document
+4. **Work on it using Test-Driven Development (TDD)**:
+   - **Write tests FIRST**: Create failing tests for new functionality or bug fixes
+   - **Implement code**: Write code to make tests pass (no cheating with hardcoded values or skipping tests)
+   - **Verify ALL tests pass**: Ensure both unit tests and E2E tests pass before proceeding
+   - **Document as needed**: Add comments, update docs where appropriate
    - If creating database migrations:
      - Place SQL files in `supabase/migrations/` with numbered prefixes
      - Document what the migration does in the PR description
@@ -172,12 +179,17 @@ history/
 - ✅ Store AI planning docs in `history/` directory
 - ✅ Create a new branch for each issue
 - ✅ Use Conventional Commits format with issue IDs
+- ✅ **Write tests FIRST (Test-Driven Development)**
+- ✅ **Ensure ALL tests pass before pushing (no skipping, no hardcoded values)**
 - ✅ **Run `npm run lint` and `npm run type-check` before closing any issue**
 - ✅ Push branches for human review before merging
 - ❌ Do NOT create markdown TODO lists
 - ❌ Do NOT use external issue trackers
 - ❌ Do NOT duplicate tracking systems
 - ❌ Do NOT clutter repo root with planning documents
+- ❌ Do NOT skip writing tests for new work
+- ❌ Do NOT push with failing tests
+- ❌ Do NOT cheat on tests (hardcoded values, skipping tests)
 - ❌ Do NOT merge to main without human review
 - ❌ Do NOT commit directly to main branch
 
