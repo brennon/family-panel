@@ -54,18 +54,10 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    // WebKit browsers: Enabled locally, disabled in CI
-    // CI Issue: WebKit parent email/password login times out after 30s in GitHub Actions
-    // - Works perfectly locally (100% pass rate)
-    // - WebKit kid PIN login works in CI
-    // - Only affects parent email/password authentication in CI environment
-    // - Likely related to webkit cookie/session handling in Ubuntu CI
-    ...(!process.env.CI ? [
-      {
-        name: 'webkit',
-        use: { ...devices['Desktop Safari'] },
-      },
-    ] : []),
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
 
     // Mobile viewports
     {
@@ -73,12 +65,10 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
 
-    ...(!process.env.CI ? [
-      {
-        name: 'Mobile Safari',
-        use: { ...devices['iPhone 12'] },
-      },
-    ] : []),
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    },
   ],
 
   // Run your local dev server before starting the tests

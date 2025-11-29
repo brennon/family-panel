@@ -49,10 +49,10 @@ test.describe('Authentication', () => {
     await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
-    await Promise.all([
-      page.waitForURL('/dashboard', { timeout: 30000 }),
-      page.getByRole('button', { name: /sign in/i }).click(),
-    ]);
+    // WebKit needs both URL change and load state wait
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
 
     // Should show parent's name
     const nameRegex = new RegExp(users.parent.name, 'i');
@@ -91,10 +91,10 @@ test.describe('Authentication', () => {
     await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
-    await Promise.all([
-      page.waitForURL('/dashboard', { timeout: 30000 }),
-      page.getByRole('button', { name: /sign in/i }).click(),
-    ]);
+    // WebKit needs both URL change and load state wait
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
 
     // Wait for user data to load
     const nameRegex = new RegExp(users.parent.name, 'i');
@@ -152,10 +152,10 @@ test.describe('Authentication', () => {
     await page.getByLabel('Password').fill(users.parent.password);
 
     // Submit form and wait for navigation
-    await Promise.all([
-      page.waitForURL('/dashboard', { timeout: 30000 }),
-      page.getByRole('button', { name: /sign in/i }).click(),
-    ]);
+    // WebKit needs both URL change and load state wait
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.waitForURL('/dashboard', { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
 
     // Sign out and wait for navigation
     await Promise.all([
