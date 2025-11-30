@@ -33,9 +33,9 @@ jobs:
 
       - name: Initialize beads database
         run: |
-          # Hydrate beads database from existing issues.jsonl (non-interactive)
+          # Initialize database and import issues from JSONL
           cd ${{ github.workspace }}
-          bd doctor --fix --yes
+          bd init --prefix fp
 
       - name: Configure git identity
         run: |
