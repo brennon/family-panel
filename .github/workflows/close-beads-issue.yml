@@ -33,9 +33,11 @@ jobs:
 
       - name: Initialize beads database
         run: |
-          # Initialize database and import issues from JSONL
+          # Initialize database from JSONL (non-interactive mode for CI)
+          # --quiet: non-interactive mode for automation
+          # --force: required when issues.jsonl exists (safe in CI fresh clone)
           cd ${{ github.workspace }}
-          bd init --prefix fp
+          bd init --quiet --force
 
       - name: Configure git identity
         run: |
