@@ -4,3 +4,4 @@
  */
 
 export * from './user-repository';
+export * from './chore-repository';
