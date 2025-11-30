@@ -13,14 +13,17 @@ export const createMockSupabaseClient = () => {
     verifyOtp: jest.fn(),
   };
 
-  const mockFrom = jest.fn(() => ({
+  // Create chainable query builder mock
+  const mockQueryBuilder = {
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
     single: jest.fn(),
     insert: jest.fn().mockReturnThis(),
     update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-  }));
+    delete: jest.fn().mockReturnThis(), // Make delete chainable
+  };
+
+  const mockFrom = jest.fn(() => mockQueryBuilder);
 
   const mockRpc = jest.fn();
 
