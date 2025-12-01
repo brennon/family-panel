@@ -141,6 +141,126 @@ describe('Chores [id] API Routes', () => {
       expect(response.status).toBe(401);
       expect(data.error).toBe('Authentication required');
     });
+
+    it('should return 400 when monetaryValueCents is negative', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      const mockUserQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+          error: null,
+        }),
+      };
+
+      mockSupabase.from.mockReturnValue(mockUserQuery);
+
+      const request = new Request('http://localhost:3000/api/chores/chore-123', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          monetaryValueCents: -50,
+        }),
+      });
+
+      const response = await PATCH(request as any, { params: Promise.resolve({ id: 'chore-123' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Monetary value cannot be negative');
+    });
+
+    it('should return 400 when monetaryValueCents is not an integer', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      const mockUserQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+          error: null,
+        }),
+      };
+
+      mockSupabase.from.mockReturnValue(mockUserQuery);
+
+      const request = new Request('http://localhost:3000/api/chores/chore-123', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          monetaryValueCents: 12.99,
+        }),
+      });
+
+      const response = await PATCH(request as any, { params: Promise.resolve({ id: 'chore-123' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Monetary value must be an integer (cents)');
+    });
+
+    it('should return 500 when chore is not found', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      const mockUserQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+          error: null,
+        }),
+      };
+
+      const mockUpdateQuery = {
+        update: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: null,
+          error: { code: 'PGRST116', message: 'Row not found' },
+        }),
+      };
+
+      mockSupabase.from
+        .mockReturnValueOnce(mockUserQuery)
+        .mockReturnValueOnce(mockUpdateQuery);
+
+      const request = new Request('http://localhost:3000/api/chores/nonexistent-id', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: 'Updated name',
+        }),
+      });
+
+      const response = await PATCH(request as any, { params: Promise.resolve({ id: 'nonexistent-id' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.error).toBe('Failed to update chore');
+    });
   });
 
   describe('DELETE /api/chores/[id]', () => {
@@ -237,6 +357,49 @@ describe('Chores [id] API Routes', () => {
 
       expect(response.status).toBe(401);
       expect(data.error).toBe('Authentication required');
+    });
+
+    it('should return 500 when chore is not found', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      const mockUserQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+          error: null,
+        }),
+      };
+
+      const mockDeleteQuery = {
+        delete: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockResolvedValue({
+          data: null,
+          error: { code: 'PGRST116', message: 'Row not found' },
+        }),
+      };
+
+      mockSupabase.from
+        .mockReturnValueOnce(mockUserQuery)
+        .mockReturnValueOnce(mockDeleteQuery);
+
+      const request = new Request('http://localhost:3000/api/chores/nonexistent-id', {
+        method: 'DELETE',
+      });
+
+      const response = await DELETE(request as any, { params: Promise.resolve({ id: 'nonexistent-id' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.error).toBe('Failed to delete chore');
     });
   });
 });
