@@ -2,34 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ChoreRepository } from '@/lib/repositories';
 import { ChoreService } from '@/lib/services';
+import { getAuthenticatedUser, isParent } from '@/lib/api/auth-helpers';
 import type { UpdateChoreData } from '@/types';
-
-/**
- * Helper function to get authenticated user and verify they're a parent
- */
-async function getAuthenticatedUser(supabase: any) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return { user: null, error: 'Authentication required' };
-  }
-
-  // Get user profile to check role
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('id, email, name, role')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return { user: null, error: 'User profile not found' };
-  }
-
-  return { user: profile, error: null };
-}
 
 /**
  * PATCH /api/chores/[id]
@@ -49,7 +23,7 @@ export async function PATCH(
     }
 
     // Verify user is a parent
-    if (user.role !== 'parent') {
+    if (!isParent(user)) {
       return NextResponse.json(
         { error: 'Only parents can update chores' },
         { status: 403 }
@@ -58,6 +32,22 @@ export async function PATCH(
 
     const body = await request.json();
     const { name, description, monetaryValueCents } = body;
+
+    // Validate monetary value if provided
+    if (monetaryValueCents !== undefined && monetaryValueCents !== null) {
+      if (!Number.isInteger(monetaryValueCents)) {
+        return NextResponse.json(
+          { error: 'Monetary value must be an integer (cents)' },
+          { status: 400 }
+        );
+      }
+      if (monetaryValueCents < 0) {
+        return NextResponse.json(
+          { error: 'Monetary value cannot be negative' },
+          { status: 400 }
+        );
+      }
+    }
 
     const updateData: UpdateChoreData = {};
     if (name !== undefined) updateData.name = name.trim();
@@ -97,7 +87,7 @@ export async function DELETE(
     }
 
     // Verify user is a parent
-    if (user.role !== 'parent') {
+    if (!isParent(user)) {
       return NextResponse.json(
         { error: 'Only parents can delete chores' },
         { status: 403 }

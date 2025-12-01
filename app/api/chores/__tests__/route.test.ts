@@ -241,5 +241,67 @@ describe('Chores API Routes', () => {
       expect(response.status).toBe(400);
       expect(data.error).toBe('Chore name is required');
     });
+
+    it('should return 400 when monetaryValueCents is negative', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      mockFrom.single.mockResolvedValue({
+        data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+        error: null,
+      });
+
+      const request = new Request('http://localhost:3000/api/chores', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test chore',
+          monetaryValueCents: -100,
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Monetary value cannot be negative');
+    });
+
+    it('should return 400 when monetaryValueCents is not an integer', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: {
+          user: {
+            id: 'parent-id',
+            email: 'parent@example.com',
+          },
+        },
+        error: null,
+      });
+
+      mockFrom.single.mockResolvedValue({
+        data: { id: 'parent-id', role: 'parent', email: 'parent@example.com', name: 'Parent' },
+        error: null,
+      });
+
+      const request = new Request('http://localhost:3000/api/chores', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Test chore',
+          monetaryValueCents: 5.50,
+        }),
+      });
+
+      const response = await POST(request as any);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Monetary value must be an integer (cents)');
+    });
   });
 });

@@ -2,34 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ChoreRepository } from '@/lib/repositories';
 import { ChoreService } from '@/lib/services';
+import { getAuthenticatedUser, isParent } from '@/lib/api/auth-helpers';
 import type { CreateChoreData } from '@/types';
-
-/**
- * Helper function to get authenticated user and verify they're a parent
- */
-async function getAuthenticatedUser(supabase: any) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return { user: null, error: 'Authentication required' };
-  }
-
-  // Get user profile to check role
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('id, email, name, role')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return { user: null, error: 'User profile not found' };
-  }
-
-  return { user: profile, error: null };
-}
 
 /**
  * GET /api/chores
@@ -73,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user is a parent
-    if (user.role !== 'parent') {
+    if (!isParent(user)) {
       return NextResponse.json(
         { error: 'Only parents can create chores' },
         { status: 403 }
@@ -89,6 +63,22 @@ export async function POST(request: NextRequest) {
         { error: 'Chore name is required' },
         { status: 400 }
       );
+    }
+
+    // Validate monetary value if provided
+    if (monetaryValueCents !== undefined && monetaryValueCents !== null) {
+      if (!Number.isInteger(monetaryValueCents)) {
+        return NextResponse.json(
+          { error: 'Monetary value must be an integer (cents)' },
+          { status: 400 }
+        );
+      }
+      if (monetaryValueCents < 0) {
+        return NextResponse.json(
+          { error: 'Monetary value cannot be negative' },
+          { status: 400 }
+        );
+      }
     }
 
     const createData: CreateChoreData = {
