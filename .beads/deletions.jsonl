@@ -23,3 +23,5 @@
 {"id":"fp-601","ts":"2025-11-29T15:43:34.846995Z","by":"bortzb","reason":"manual delete"}
 {"id":"fp-yvn","ts":"2025-11-29T22:30:41.805849Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
 {"id":"fp-740","ts":"2025-11-29T22:30:41.811613Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
+{"id":"fp-wth","ts":"2025-12-01T20:15:28.647857Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
+{"id":"fp-t0m","ts":"2025-12-01T20:15:28.658017Z","by":"git-history-backfill","reason":"recovered from git history (pruned from manifest)"}
