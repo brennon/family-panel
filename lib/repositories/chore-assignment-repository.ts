@@ -70,7 +70,17 @@ export class ChoreAssignmentRepository {
   }
 
   /**
-   * Find assignment by ID
+   * Find a chore assignment by its ID
+   *
+   * @param id - UUID of the assignment to find
+   * @returns Promise resolving to ChoreAssignment if found, null otherwise
+   * @throws Error if database query fails (non-404 errors)
+   *
+   * @example
+   * const assignment = await repository.findById('assignment-123');
+   * if (assignment) {
+   *   console.log(`Chore ${assignment.choreId} assigned to ${assignment.userId}`);
+   * }
    */
   async findById(id: string): Promise<ChoreAssignment | null> {
     const { data, error } = await this.supabase
@@ -91,7 +101,23 @@ export class ChoreAssignmentRepository {
   }
 
   /**
-   * Find assignments by date and optionally by kid
+   * Find chore assignments by date, optionally filtered by kid
+   *
+   * @param date - Date to query assignments for
+   * @param kidId - Optional UUID of kid to filter assignments by
+   * @returns Promise resolving to array of ChoreAssignments (empty if none found)
+   * @throws Error if database query fails
+   *
+   * @example
+   * // Get all assignments for a date
+   * const allAssignments = await repository.findByDate(new Date('2024-01-15'));
+   *
+   * @example
+   * // Get assignments for specific kid
+   * const kidAssignments = await repository.findByDate(
+   *   new Date('2024-01-15'),
+   *   'kid-123'
+   * );
    */
   async findByDate(
     date: Date,
@@ -116,7 +142,18 @@ export class ChoreAssignmentRepository {
   }
 
   /**
-   * Create a new assignment
+   * Create a new chore assignment
+   *
+   * @param data - Assignment creation data (choreId, userId, assignedDate)
+   * @returns Promise resolving to the created ChoreAssignment
+   * @throws Error if database insert fails (e.g., constraint violations)
+   *
+   * @example
+   * const assignment = await repository.create({
+   *   choreId: 'chore-123',
+   *   userId: 'kid-456',
+   *   assignedDate: new Date('2024-01-15')
+   * });
    */
   async create(data: CreateChoreAssignmentData): Promise<ChoreAssignment> {
     const dbInsert = this.toDbInsert(data);
@@ -135,7 +172,28 @@ export class ChoreAssignmentRepository {
   }
 
   /**
-   * Update an existing assignment
+   * Update an existing chore assignment
+   *
+   * Typically used to update completion status and timestamp.
+   *
+   * @param id - UUID of the assignment to update
+   * @param data - Assignment update data (completed, completedAt)
+   * @returns Promise resolving to the updated ChoreAssignment
+   * @throws Error if database update fails or assignment not found
+   *
+   * @example
+   * // Mark as completed
+   * const updated = await repository.update('assignment-123', {
+   *   completed: true,
+   *   completedAt: new Date()
+   * });
+   *
+   * @example
+   * // Mark as uncompleted
+   * const reverted = await repository.update('assignment-123', {
+   *   completed: false,
+   *   completedAt: null
+   * });
    */
   async update(
     id: string,
@@ -158,7 +216,14 @@ export class ChoreAssignmentRepository {
   }
 
   /**
-   * Delete an assignment
+   * Delete a chore assignment
+   *
+   * @param id - UUID of the assignment to delete
+   * @returns Promise resolving when deletion is complete
+   * @throws Error if database deletion fails
+   *
+   * @example
+   * await repository.delete('assignment-123');
    */
   async delete(id: string): Promise<void> {
     const { error } = await this.supabase

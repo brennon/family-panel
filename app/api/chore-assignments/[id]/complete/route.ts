@@ -6,8 +6,45 @@ import { getAuthenticatedUser, isParent } from '@/lib/api/auth-helpers';
 
 /**
  * PATCH /api/chore-assignments/[id]/complete
- * Mark a chore assignment as completed
- * Can be done by the assigned kid or any parent
+ *
+ * Mark a chore assignment as completed with a timestamp.
+ * Can be accessed by the assigned kid or any parent.
+ *
+ * @param request - NextRequest object
+ * @param params - Route parameters containing the assignment ID
+ * @param params.id - UUID of the assignment to complete
+ *
+ * @returns {Promise<NextResponse>} JSON response with updated assignment
+ *
+ * Response Body:
+ * ```json
+ * {
+ *   "assignment": {
+ *     "id": "uuid",
+ *     "choreId": "uuid",
+ *     "userId": "uuid",
+ *     "assignedDate": "2024-01-15T00:00:00.000Z",
+ *     "completed": true,
+ *     "completedAt": "2024-01-15T10:30:00.000Z",
+ *     "createdAt": "2024-01-14T00:00:00.000Z",
+ *     "updatedAt": "2024-01-15T10:30:00.000Z"
+ *   }
+ * }
+ * ```
+ *
+ * Status Codes:
+ * - 200: Success
+ * - 401: Unauthorized (authentication required)
+ * - 403: Forbidden (user is not the assigned kid or a parent)
+ * - 404: Assignment not found
+ * - 500: Internal server error
+ *
+ * Authorization:
+ * - Assigned kid can complete their own chore
+ * - Any parent can complete any chore
+ *
+ * @example
+ * PATCH /api/chore-assignments/assignment-123/complete
  */
 export async function PATCH(
   request: NextRequest,

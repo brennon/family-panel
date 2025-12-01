@@ -6,9 +6,50 @@ import { getAuthenticatedUser, isParent } from '@/lib/api/auth-helpers';
 import type { CreateChoreAssignmentData } from '@/types';
 
 /**
- * GET /api/chore-assignments?date=YYYY-MM-DD&kidId=uuid
- * List chore assignments for a date (optionally filtered by kid)
- * All authenticated users can access
+ * GET /api/chore-assignments
+ *
+ * Retrieve chore assignments for a specific date, optionally filtered by kid.
+ * All authenticated users can access this endpoint.
+ *
+ * @param request - NextRequest object
+ *
+ * Query Parameters:
+ * @param {string} date - Required. Date in YYYY-MM-DD format (e.g., "2024-01-15")
+ * @param {string} [kidId] - Optional. UUID of the kid to filter assignments
+ *
+ * @returns {Promise<NextResponse>} JSON response with assignments array
+ *
+ * Response Body:
+ * ```json
+ * {
+ *   "assignments": [
+ *     {
+ *       "id": "uuid",
+ *       "choreId": "uuid",
+ *       "userId": "uuid",
+ *       "assignedDate": "2024-01-15T00:00:00.000Z",
+ *       "completed": false,
+ *       "completedAt": null,
+ *       "createdAt": "2024-01-14T00:00:00.000Z",
+ *       "updatedAt": "2024-01-14T00:00:00.000Z"
+ *     }
+ *   ]
+ * }
+ * ```
+ *
+ * Status Codes:
+ * - 200: Success
+ * - 400: Bad request (missing or invalid date parameter)
+ * - 401: Unauthorized (authentication required)
+ * - 500: Internal server error
+ *
+ * @example
+ * // Get all assignments for a date
+ * GET /api/chore-assignments?date=2024-01-15
+ *
+ * @example
+ * // Get assignments for specific kid on a date
+ * GET /api/chore-assignments?date=2024-01-15&kidId=kid-uuid-123
  */
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +101,55 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/chore-assignments
- * Assign a chore to a kid (parents only)
+ *
+ * Assign a chore to a kid for a specific date.
+ * Only parents can access this endpoint.
+ *
+ * @param request - NextRequest object
+ *
+ * Request Body:
+ * ```json
+ * {
+ *   "choreId": "uuid",      // Required. ID of the chore to assign
+ *   "userId": "uuid",       // Required. ID of the kid to assign to
+ *   "assignedDate": "2024-01-15"  // Required. Date in YYYY-MM-DD format
+ * }
+ * ```
+ *
+ * @returns {Promise<NextResponse>} JSON response with created assignment
+ *
+ * Response Body:
+ * ```json
+ * {
+ *   "assignment": {
+ *     "id": "uuid",
+ *     "choreId": "uuid",
+ *     "userId": "uuid",
+ *     "assignedDate": "2024-01-15T00:00:00.000Z",
+ *     "completed": false,
+ *     "completedAt": null,
+ *     "createdAt": "2024-01-14T00:00:00.000Z",
+ *     "updatedAt": "2024-01-14T00:00:00.000Z"
+ *   }
+ * }
+ * ```
+ *
+ * Status Codes:
+ * - 201: Created successfully
+ * - 400: Bad request (missing or invalid fields)
+ * - 401: Unauthorized (authentication required)
+ * - 403: Forbidden (user is not a parent)
+ * - 500: Internal server error
+ *
+ * @example
+ * POST /api/chore-assignments
+ * Content-Type: application/json
+ *
+ * {
+ *   "choreId": "chore-123",
+ *   "userId": "kid-456",
+ *   "assignedDate": "2024-01-15"
+ * }
  */
 export async function POST(request: NextRequest) {
   try {

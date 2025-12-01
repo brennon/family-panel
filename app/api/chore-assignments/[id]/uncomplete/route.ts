@@ -6,7 +6,44 @@ import { getAuthenticatedUser, isParent } from '@/lib/api/auth-helpers';
 
 /**
  * PATCH /api/chore-assignments/[id]/uncomplete
- * Mark a chore assignment as uncompleted (parents only)
+ *
+ * Remove completion status from a chore assignment.
+ * Only parents can access this endpoint.
+ *
+ * @param request - NextRequest object
+ * @param params - Route parameters containing the assignment ID
+ * @param params.id - UUID of the assignment to uncomplete
+ *
+ * @returns {Promise<NextResponse>} JSON response with updated assignment
+ *
+ * Response Body:
+ * ```json
+ * {
+ *   "assignment": {
+ *     "id": "uuid",
+ *     "choreId": "uuid",
+ *     "userId": "uuid",
+ *     "assignedDate": "2024-01-15T00:00:00.000Z",
+ *     "completed": false,
+ *     "completedAt": null,
+ *     "createdAt": "2024-01-14T00:00:00.000Z",
+ *     "updatedAt": "2024-01-15T11:00:00.000Z"
+ *   }
+ * }
+ * ```
+ *
+ * Status Codes:
+ * - 200: Success
+ * - 401: Unauthorized (authentication required)
+ * - 403: Forbidden (user is not a parent)
+ * - 404: Assignment not found
+ * - 500: Internal server error
+ *
+ * Authorization:
+ * - Only parents can uncomplete chore assignments
+ *
+ * @example
+ * PATCH /api/chore-assignments/assignment-123/uncomplete
  */
 export async function PATCH(
   request: NextRequest,
