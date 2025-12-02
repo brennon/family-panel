@@ -145,13 +145,25 @@ Port is configured via `.env.local` (see PARALLEL_AGENTS.md for setup).
 
 ```
 /app               # Next.js App Router pages and layouts
+  /api             # API routes (follows layered architecture)
+    /chores        # Chore CRUD operations
+    /chore-assignments  # Chore assignment and completion
+    /auth          # Authentication endpoints
+  /(routes)        # App pages (login, dashboard, etc.)
 /components        # React components (includes /ui for shadcn components)
-/lib               # Utility functions and helpers
-/services          # API clients and external service integrations
-/types             # TypeScript type definitions
+/lib               # Business logic and utilities
+  /repositories    # Data access layer (Supabase queries)
+  /services        # Business logic layer
+  /supabase        # Supabase client and utilities
+  /api             # API client helpers (auth, etc.)
+/types             # TypeScript type definitions (domain models)
 /supabase          # Database migrations and Supabase setup
-  /migrations      # SQL migration files (numbered)
+  /migrations      # SQL migration files (numbered, e.g., 001_initial_schema.sql)
+/e2e               # End-to-end tests (Playwright)
+/docs              # Project documentation
 ```
+
+**Architecture**: This project follows a layered architecture pattern. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed information about the layers and their responsibilities.
 
 ## Database Migrations
 

@@ -46,13 +46,17 @@ npx playwright test --headed
 ## Project Structure
 
 ```
-/app/api/auth/pin-login/__tests__/  # API route tests
-/app/login/__tests__/                # Component tests
-/e2e/                                # E2E tests
-/lib/test-utils/                     # Shared test utilities
-jest.config.ts                        # Jest configuration
-jest.setup.ts                         # Global test setup
-playwright.config.ts                  # Playwright configuration
+/app/api/auth/pin-login/__tests__/       # API route tests (auth)
+/app/api/chore-assignments/__tests__/    # API route tests (chore assignments)
+/app/api/chores/__tests__/               # API route tests (chores)
+/app/login/__tests__/                    # Component tests
+/lib/services/__tests__/                 # Service layer tests
+/lib/repositories/__tests__/             # Repository layer tests
+/e2e/                                    # E2E tests
+/lib/test-utils/                         # Shared test utilities
+jest.config.ts                            # Jest configuration
+jest.setup.ts                             # Global test setup
+playwright.config.ts                      # Playwright configuration
 ```
 
 ## Unit and Integration Testing
@@ -151,11 +155,18 @@ describe('POST /api/auth/pin-login', () => {
 ```
 
 **Key patterns for API route tests**:
-- Mock `createAdminClient` from `@/lib/supabase/server`
+- Mock `createClient` or `createAdminClient` from `@/lib/supabase/server`
 - Create `Request` objects with appropriate method and body
 - Call the route handler directly (e.g., `POST(request)`)
 - Assert on response status and JSON body
 - Verify mock calls to ensure correct database interactions
+- Test authentication and authorization (401, 403 responses)
+- Test input validation (400 responses)
+
+**Additional examples**:
+- `app/api/chore-assignments/__tests__/route.test.ts` - GET/POST with query params and authorization
+- `app/api/chore-assignments/[id]/complete/__tests__/route.test.ts` - PATCH with dynamic routes
+- `app/api/chores/__tests__/route.test.ts` - Full CRUD operations with role-based access
 
 ### Writing Component Tests
 
@@ -250,6 +261,177 @@ describe('LoginPage', () => {
 - Use `fireEvent` to simulate user interactions
 - Use `waitFor()` for asynchronous assertions
 - Reset mocks between tests with `jest.clearAllMocks()`
+
+### Writing Service Layer Tests
+
+Service layer tests verify business logic without database dependencies.
+
+**Example**: `lib/services/__tests__/chore-assignment-service.test.ts`
+
+```typescript
+import { ChoreAssignmentService } from '../chore-assignment-service';
+import { ChoreAssignmentRepository } from '@/lib/repositories';
+
+// Mock the repository
+jest.mock('@/lib/repositories', () => ({
+  ChoreAssignmentRepository: jest.fn(),
+}));
+
+describe('ChoreAssignmentService', () => {
+  let service: ChoreAssignmentService;
+  let mockRepository: jest.Mocked<ChoreAssignmentRepository>;
+
+  beforeEach(() => {
+    // Create mock repository with Jest mock functions
+    mockRepository = {
+      create: jest.fn(),
+      findByDate: jest.fn(),
+      update: jest.fn(),
+      findById: jest.fn(),
+    } as any;
+
+    service = new ChoreAssignmentService(mockRepository);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('assignChore', () => {
+    it('should create a chore assignment', async () => {
+      const mockAssignment = {
+        id: 'assignment-1',
+        choreId: 'chore-1',
+        userId: 'kid-1',
+        assignedDate: new Date('2024-01-15'),
+        completed: false,
+        completedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockRepository.create.mockResolvedValue(mockAssignment);
+
+      const result = await service.assignChore(
+        'chore-1',
+        'kid-1',
+        new Date('2024-01-15')
+      );
+
+      expect(result).toEqual(mockAssignment);
+      expect(mockRepository.create).toHaveBeenCalledWith({
+        choreId: 'chore-1',
+        userId: 'kid-1',
+        assignedDate: new Date('2024-01-15'),
+      });
+    });
+
+    it('should throw error when repository fails', async () => {
+      mockRepository.create.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      await expect(
+        service.assignChore('chore-1', 'kid-1', new Date('2024-01-15'))
+      ).rejects.toThrow('Failed to assign chore');
+    });
+  });
+});
+```
+
+**Key patterns for service tests**:
+- Mock repository layer completely
+- Test business logic and error handling
+- Verify correct repository methods are called with correct arguments
+- Test both success and failure scenarios
+- Keep tests focused on single service method
+
+### Writing Repository Layer Tests
+
+Repository layer tests verify database interaction and data transformation.
+
+**Example**: `lib/repositories/__tests__/chore-assignment-repository.test.ts`
+
+```typescript
+import { ChoreAssignmentRepository } from '../chore-assignment-repository';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+describe('ChoreAssignmentRepository', () => {
+  let repository: ChoreAssignmentRepository;
+  let mockSupabase: any;
+  let mockFrom: any;
+
+  beforeEach(() => {
+    // Setup mock query builder
+    mockFrom = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    };
+
+    // Setup mock Supabase client
+    mockSupabase = {
+      from: jest.fn(() => mockFrom),
+    } as unknown as SupabaseClient;
+
+    repository = new ChoreAssignmentRepository(mockSupabase);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('findByDate', () => {
+    it('should return assignments for a specific date', async () => {
+      const mockDbData = [
+        {
+          id: '1',
+          chore_id: 'chore-1',
+          user_id: 'kid-1',
+          assigned_date: '2024-01-15',
+          completed: false,
+          completed_at: null,
+          created_at: '2024-01-14T00:00:00Z',
+          updated_at: '2024-01-14T00:00:00Z',
+        },
+      ];
+
+      mockFrom.eq.mockResolvedValue({
+        data: mockDbData,
+        error: null,
+      });
+
+      const result = await repository.findByDate(new Date('2024-01-15'));
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        id: '1',
+        choreId: 'chore-1',
+        userId: 'kid-1',
+        assignedDate: new Date('2024-01-15T00:00:00.000Z'),
+        completed: false,
+        completedAt: null,
+        createdAt: new Date('2024-01-14T00:00:00Z'),
+        updatedAt: new Date('2024-01-14T00:00:00Z'),
+      });
+
+      expect(mockSupabase.from).toHaveBeenCalledWith('chore_assignments');
+      expect(mockFrom.select).toHaveBeenCalledWith('*');
+      expect(mockFrom.eq).toHaveBeenCalledWith('assigned_date', '2024-01-15');
+    });
+  });
+});
+```
+
+**Key patterns for repository tests**:
+- Mock Supabase client and query builder
+- Test database transformation (snake_case to camelCase, strings to Dates)
+- Verify correct database queries are built
+- Test error handling (database errors, not found)
+- Test filtering and query options
 
 ### Test Utilities
 
