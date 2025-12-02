@@ -5,3 +5,4 @@
 
 export * from './user-service';
 export * from './chore-service';
+export * from './chore-assignment-service';

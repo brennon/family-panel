@@ -5,3 +5,4 @@
 
 export * from './user-repository';
 export * from './chore-repository';
+export * from './chore-assignment-repository';

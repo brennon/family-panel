@@ -5,3 +5,4 @@
 
 export * from './user';
 export * from './chore';
+export * from './chore-assignment';

@@ -145,13 +145,25 @@ Port is configured via `.env.local` (see PARALLEL_AGENTS.md for setup).
 
 ```
 /app               # Next.js App Router pages and layouts
+  /api             # API routes (follows layered architecture)
+    /chores        # Chore CRUD operations
+    /chore-assignments  # Chore assignment and completion
+    /auth          # Authentication endpoints
+  /(routes)        # App pages (login, dashboard, etc.)
 /components        # React components (includes /ui for shadcn components)
-/lib               # Utility functions and helpers
-/services          # API clients and external service integrations
-/types             # TypeScript type definitions
+/lib               # Business logic and utilities
+  /repositories    # Data access layer (Supabase queries)
+  /services        # Business logic layer
+  /supabase        # Supabase client and utilities
+  /api             # API client helpers (auth, etc.)
+/types             # TypeScript type definitions (domain models)
 /supabase          # Database migrations and Supabase setup
-  /migrations      # SQL migration files (numbered)
+  /migrations      # SQL migration files (numbered, e.g., 001_initial_schema.sql)
+/e2e               # End-to-end tests (Playwright)
+/docs              # Project documentation
 ```
+
+**Architecture**: This project follows a layered architecture pattern. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed information about the layers and their responsibilities.
 
 ## Database Migrations
 
@@ -160,6 +172,105 @@ Port is configured via `.env.local` (see PARALLEL_AGENTS.md for setup).
 - Migrations are **NOT automatically applied** - they must be run manually in Supabase
 - Include migration instructions in PR description
 - See `docs/DEPLOYMENT.md` for complete migration workflow
+
+## Code Documentation Standards
+
+**REQUIRED**: All public APIs must have comprehensive JSDoc documentation.
+
+### What to Document
+- **API Routes** (`app/api/**/*.ts`)
+- **Service Layer** (`lib/services/*.ts`)
+- **Repository Layer** (`lib/repositories/*.ts`)
+- **Utility Functions** (public exports in `lib/`)
+
+### Documentation Requirements
+
+**For All Public APIs:**
+```typescript
+/**
+ * Brief description of what this does
+ *
+ * More detailed explanation if needed.
+ *
+ * @param paramName - Description of parameter and its purpose
+ * @param optionalParam - Optional. Description with default behavior
+ * @returns Description of return value and what it represents
+ * @throws Error conditions that callers should handle
+ *
+ * @example
+ * // Practical usage example
+ * const result = await service.methodName('param-value');
+ * console.log(result);
+ */
+```
+
+**For API Routes (additional requirements):**
+```typescript
+/**
+ * HTTP_METHOD /api/route/path
+ *
+ * Description of what this endpoint does.
+ * Authorization requirements stated clearly.
+ *
+ * @param request - NextRequest object
+ * @param params - Route parameters (for dynamic routes)
+ *
+ * Query Parameters: (if applicable)
+ * @param {string} queryParam - Description
+ *
+ * Request Body: (for POST/PATCH/PUT)
+ * ```json
+ * {
+ *   "field": "type",  // Description
+ *   "optional?": "type"
+ * }
+ * ```
+ *
+ * @returns {Promise<NextResponse>} JSON response
+ *
+ * Response Body:
+ * ```json
+ * {
+ *   "data": { ... }
+ * }
+ * ```
+ *
+ * Status Codes:
+ * - 200: Success
+ * - 201: Created
+ * - 400: Bad request (validation errors)
+ * - 401: Unauthorized (authentication required)
+ * - 403: Forbidden (insufficient permissions)
+ * - 404: Not found
+ * - 500: Internal server error
+ *
+ * Authorization:
+ * - Who can access this endpoint
+ *
+ * @example
+ * GET /api/resource?param=value
+ *
+ * @example
+ * POST /api/resource
+ * Content-Type: application/json
+ *
+ * { "field": "value" }
+ */
+```
+
+### Reference Implementation
+See `app/api/chore-assignments/route.ts` for comprehensive examples of:
+- API route documentation with request/response formats
+- Status code documentation
+- Authorization requirements
+- Practical usage examples
+
+See `lib/services/chore-assignment-service.ts` and `lib/repositories/chore-assignment-repository.ts` for service and repository documentation standards.
+
+### When to Add Documentation
+- **During initial implementation** - Document as you write the code
+- **Before creating PR** - Ensure all public APIs are documented
+- **Quality check** - Documentation is part of the PR review checklist
 
 ## Adding shadcn/ui Components
 
