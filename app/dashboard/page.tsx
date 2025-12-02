@@ -71,7 +71,11 @@ export default function DashboardPage() {
             <CardContent className="space-y-3">
               {user?.role === 'parent' ? (
                 <>
-                  <Button className="w-full" variant="outline">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => router.push('/admin/chores')}
+                  >
                     Manage Chores
                   </Button>
                   <Button className="w-full" variant="outline">
