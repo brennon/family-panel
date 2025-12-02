@@ -64,10 +64,9 @@ jobs:
           bd close ${{ steps.extract-issue.outputs.issue_id }} \
             --reason "PR #${{ github.event.pull_request.number }} merged" \
             --json
-          # Force flush to JSONL by running a query command
-          # This ensures changes are written to .beads/issues.jsonl before commit
-          bd list --json > /dev/null
-          # We skip 'bd sync' to avoid worktree conflicts (we're already on main)
+          # Flush database changes to JSONL without git operations
+          # The --flush-only flag exports pending changes to issues.jsonl
+          bd sync --flush-only
 
       - name: Commit updated beads database
         if: steps.extract-issue.outputs.issue_id != ''
