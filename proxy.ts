@@ -39,17 +39,17 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
+  // Refresh session if expired - use getUser() to validate token with server
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login');
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
   const isPublicPage = request.nextUrl.pathname === '/' || isAuthPage || isApiRoute;
 
   // Redirect to login if not authenticated and trying to access protected route
-  if (!session && !isPublicPage) {
+  if (!user && !isPublicPage) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Redirect to dashboard if authenticated and trying to access login
-  if (session && isAuthPage) {
+  if (user && isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
